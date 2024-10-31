@@ -11,6 +11,8 @@ output: github_document
 
 * Yifei Yu - yy3563
 
+* Yuechu Hu - yh3822
+
 
 
 ## The tentative project title
@@ -32,7 +34,7 @@ The project utilizes the data from the Coffee Quality Database to rate coffee ba
 
 ## The planned analyses / visualizations / coding challenges
 
-
+Data cleaning, data binding, EDA, linear model, and correlation will be applied in this project. Potential coding challenges may include how to define and filter out categorical variables, how to quantify survey questions, how to visualize countries, regions, and altitudes, and how to discover and measure differences between regions.
 
 ## The planned timeline
 
