@@ -24,7 +24,7 @@ Since the beginning of the 20th century, coffee has transcended national boundar
 
 ## The intended final products
 
-
+In general, we hope to obtain a comprehensive view on both the objective factors that influence the taste of the coffee (e.g. species, altitude) and how features of different populations affect their subjective preferences for coffee (e.g. gender, education level). There are also additional questions that could be explored, such as how much people would pay for a cup of coffee based on their quality, and does the public taste of coffee accords with the "official" level of certification. 
 
 ## The anticipated data sources
 
