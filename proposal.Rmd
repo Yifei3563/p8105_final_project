@@ -1,6 +1,9 @@
 ---
 title: "Proposal"
 output: pdf_document
+header-includes:
+   - \usepackage{setspace}
+   - \setstretch{0.8}
 ---
 
 ## The group members (names and UNIs)
