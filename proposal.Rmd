@@ -1,0 +1,43 @@
+---
+title: "Proposal"
+output: github_document
+---
+
+## The group members (names and UNIs)
+
+* Jinghan Zhao - jz3902
+
+* Leyang Rui - lr3257
+
+* Yifei Yu - yy3563
+
+
+
+## The tentative project title
+
+Not your average joe: what makes the best coffee?
+
+
+## The motivation for this project
+
+Since the beginning of the 20th century, coffee has transcended national boundaries and catered to the tastes of diverse groups of people. As a group of coffee lovers, we are well-realized about how important a good cup of coffee can be for a fulfilling day. Therefore, we wish to analyze the quality of coffee from two aspects -- the objective geographical factors and subjective costumer preferences.
+
+
+
+
+
+## The intended final products
+
+
+
+## The anticipated data sources
+
+The project utilizes the data from the Coffee Quality Database to rate coffee based on their acidity, sweetness, aroma, altitude, and region, offering a comprehensive look at coffee. By incorporating data on the "Great American Coffee Taste Test", our project also explores how consumer tastes align with professional ratings. This combination of objective and public data can provide insights into how coffee qualities influence consumer preferences, helping producers, coffee shops, and consumers make their favorite choices.
+
+## The planned analyses / visualizations / coding challenges
+
+
+
+## The planned timeline
+
+
