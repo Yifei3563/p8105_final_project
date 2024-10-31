@@ -9,6 +9,8 @@ output: github_document
 
 * Leyang Rui - lr3257
 
+* Yifei Yu - yy3563
+
 
 
 ## The tentative project title
@@ -30,7 +32,7 @@ Since the beginning of the 20th century, coffee has transcended national boundar
 
 ## The anticipated data sources
 
-
+The project utilizes the data from the Coffee Quality Database to rate coffee based on their acidity, sweetness, aroma, altitude, and region, offering a comprehensive look at coffee. By incorporating data on the "Great American Coffee Taste Test", our project also explores how consumer tastes align with professional ratings. This combination of objective and public data can provide insights into how coffee qualities influence consumer preferences, helping producers, coffee shops, and consumers make their favorite choices.
 
 ## The planned analyses / visualizations / coding challenges
 
