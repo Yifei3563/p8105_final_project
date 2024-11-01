@@ -1,6 +1,6 @@
 ---
 title: "Proposal"
-output: pdf_document
+output: github_document
 header-includes:
    - \usepackage{setspace}
    - \setstretch{0.8}
