@@ -1,0 +1,23 @@
+---
+title: "surveys_data"
+author: "Leonor Rui"
+date: "2024-11-21"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(readxl)
+```
+
+## Import dataset
+
+```{r}
+survey = read_csv("data/coffee_survey.csv") |>
+  janitor::clean_names()
+```
+
+
+
