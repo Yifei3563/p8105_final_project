@@ -1,0 +1,25 @@
+---
+title: "Final Project"
+author: "Group 43"
+date: "2024-11-21"
+output: github_document
+---
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(modelr)
+library(readxl)
+library(haven)
+```
+
+## Import Data
+
+```{r}
+ratings = read_csv("data/coffee_ratings.csv") |> 
+  janitor::clean_names()
+
+survey =read_csv("data/coffee_survey.csv") |> 
+  janitor::clean_names()
+```
+
