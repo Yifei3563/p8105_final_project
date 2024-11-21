@@ -34,7 +34,7 @@ ratings = read_csv("data/coffee_ratings.csv") |>
          region, number_of_bags, bag_weight, harvest_year, grading_date, variety,
          processing_method, aroma, flavor, aftertaste, acidity, body, balance,
          uniformity, clean_cup, sweetness, cupper_points, moisture, color,
-         altitude_low_meters, altitude_high_meters, altitude_mean_meters,)
+         altitude_low_meters, altitude_high_meters, altitude_mean_meters)
 ```
 
     ## Rows: 1339 Columns: 43
@@ -47,7 +47,7 @@ ratings = read_csv("data/coffee_ratings.csv") |>
     ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 
 ``` r
-survey =read_csv("data/coffee_survey.csv") |> 
+survey = read_csv("data/coffee_survey.csv") |> 
   janitor::clean_names()
 ```
 
