@@ -13,32 +13,37 @@ library(readxl)
 library(haven)
 ```
 
-## Import Data
+## Data Importing and Cleaning
 
 ```{r, warning=FALSE, message=FALSE}
-ratings = read_csv("data/coffee_ratings.csv") |> 
-  janitor::clean_names() |> 
+ratings_df = read_csv("data/coffee_ratings.csv") %>% 
+  janitor::clean_names() %>%
   select(total_cup_points, species, country_of_origin, 
          region, number_of_bags, bag_weight, grading_date, variety,
          processing_method, aroma, flavor, aftertaste, acidity, body, balance,
          uniformity, clean_cup, sweetness, cupper_points, moisture, color,
-         altitude_low_meters, altitude_high_meters, altitude_mean_meters) |>
-  mutate(grading_year = str_extract(grading_date, "\\d{4}"))
+         altitude_low_meters, altitude_high_meters, altitude_mean_meters) %>%
+  mutate(grading_year = str_extract(grading_date, "\\d{4}"),
+         species = as.factor(species),
+         variety = as.factor(variety),
+         processing_method = as.factor(processing_method),
+         moisture = as.factor(moisture),
+         color = as.factor(color))
+```
 
 
+
+
+```{r, warning=FALSE, message=FALSE}
 survey = read_csv("data/coffee_survey.csv") |> 
   janitor::clean_names()
 ```
 
 
 
-```{r}
-ratings$species = as.factor(ratings$species)
-ratings$variety = as.factor(ratings$variety)
-ratings$processing_method = as.factor(ratings$processing_method)
-ratings$moisture = as.factor(ratings$moisture)
-ratings$color = as.factor(ratings$color)
-```
+
+
+
 
 
 
