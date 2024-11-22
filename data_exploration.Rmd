@@ -12,6 +12,7 @@ library(tidyverse)
 library(ggplot2)
 library(modelr)
 library(haven)
+library(plotly)
 
 knitr::opts_chunk$set(
   fig.width = 6,
@@ -92,6 +93,37 @@ top_10_countries |>
     fill = "Country"
   ) 
 ```
+
+
+### 
+
+```{r}
+ratings_df |> 
+  ggplot(aes(x = moisture, y = altitude_mean_meters)) +
+  geom_bin2d(binwidth = c(0.01, 300)) +
+  scale_fill_gradient() +
+  theme_minimal()
+```
+
+
+
+```{r}
+ratings_df |> 
+  drop_na(country_of_origin) |> 
+  count(country_of_origin) |> 
+  mutate(country_of_origin = fct_reorder(country_of_origin, n)) |> 
+  plot_ly(x = ~country_of_origin, y = ~n, color = ~country_of_origin, type = "bar", colors = "viridis")
+```
+
+```{r}
+ratings_df |> 
+  drop_na(country_of_origin) |> 
+  count(country_of_origin) |> 
+  filter(n  > 20) |> 
+  mutate(country_of_origin = fct_reorder(country_of_origin, total_cup_points)) |> 
+  plot_ly(y = ~total_cup_points, color = ~country_of_origin, type = "box", colors = "viridis")
+```
+
 
 
 
