@@ -41,13 +41,13 @@ ratings_df = read_csv("data/coffee_ratings.csv") %>%
 ### The Origins of Top Coffees Each Year from 2010 to 2018
 
 ```{r}
-top_origins = 
+top_origins_yearly = 
   ratings_df |> 
   group_by(grading_year) |> 
   arrange(grading_year, desc(total_cup_points)) |> 
   slice(1)
 
-top_origins |> 
+top_origins_yearly |> 
   arrange(grading_year) |> 
   select(grading_year, country_of_origin, total_cup_points) |> 
   knitr::kable(
@@ -61,4 +61,62 @@ The diversity of countries shows that competition in the coffee industry is glob
 Brazil has been on the list twice (2011 and 2013), indicating that it has consistently produced highly rated coffee during this period.
 
 Ethiopia showed pretty good coffee strength with a top score of 90.58 in 2015, which is the highest coffee rating in those eight years.
+
+
+### Top 10 Countries with High Coffee Ratings Within the Eight Years
+
+```{r}
+top_10_countries = 
+  ratings_df |> 
+  group_by(country_of_origin) |> 
+  summarize(
+    avg_total_cup_points = mean(total_cup_points, na.rm = TRUE),
+    total_cup_points = sum(total_cup_points, na.rm = TRUE),
+    num_entries = n()
+  ) |> 
+  arrange(desc(avg_total_cup_points)) |> 
+  slice_head(n = 10)
+
+top_10_countries |> 
+  ggplot(aes(x = reorder(country_of_origin, avg_total_cup_points),
+             y = avg_total_cup_points,
+             fill = country_of_origin)) +
+  geom_col() +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+  labs(
+    title = "Top 10 Countries with High Coffee Ratings 
+    (2010-2018)",
+    x = "Country",
+    y = "Average Total Cup Points",
+    fill = "Country"
+  ) 
+```
+
+
+
+### 我再想想 Differences between different regions of coffee within the same country
+
+```{r}
+region_analysis =
+  ratings_df |> 
+  group_by(country_of_origin, region) |> 
+  summarize(
+    avg_acidity = mean(acidity, na.rm = TRUE),
+    avg_sweetness = mean(sweetness, na.rm = TRUE)
+  ) 
+
+region_analysis |> 
+  pivot_longer(
+    cols = c(avg_acidity, avg_sweetness), 
+    names_to = "attribute", 
+    values_to = "value") |> 
+  ggplot(aes(x = region, y = value, fill = attribute)) +
+  geom_boxplot() +
+  facet_wrap(~country_of_origin)
+```
+
+
+
+
 

@@ -376,13 +376,13 @@ div.tocify {
 <div id="the-origins-of-top-coffees-each-year-from-2010-to-2018"
 class="section level3">
 <h3>The Origins of Top Coffees Each Year from 2010 to 2018</h3>
-<pre class="r"><code>top_origins = 
+<pre class="r"><code>top_origins_yearly = 
   ratings_df |&gt; 
   group_by(grading_year) |&gt; 
   arrange(grading_year, desc(total_cup_points)) |&gt; 
   slice(1)
 
-top_origins |&gt; 
+top_origins_yearly |&gt; 
   arrange(grading_year) |&gt; 
   select(grading_year, country_of_origin, total_cup_points) |&gt; 
   knitr::kable(
@@ -453,6 +453,61 @@ year.</p>
 has consistently produced highly rated coffee during this period.</p>
 <p>Ethiopia showed pretty good coffee strength with a top score of 90.58
 in 2015, which is the highest coffee rating in those eight years.</p>
+</div>
+<div
+id="top-10-countries-with-high-coffee-ratings-within-the-eight-years"
+class="section level3">
+<h3>Top 10 Countries with High Coffee Ratings Within the Eight
+Years</h3>
+<pre class="r"><code>top_10_countries = 
+  ratings_df |&gt; 
+  group_by(country_of_origin) |&gt; 
+  summarize(
+    avg_total_cup_points = mean(total_cup_points, na.rm = TRUE),
+    total_cup_points = sum(total_cup_points, na.rm = TRUE),
+    num_entries = n()
+  ) |&gt; 
+  arrange(desc(avg_total_cup_points)) |&gt; 
+  slice_head(n = 10)
+
+top_10_countries |&gt; 
+  ggplot(aes(x = reorder(country_of_origin, avg_total_cup_points),
+             y = avg_total_cup_points,
+             fill = country_of_origin)) +
+  geom_col() +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+  labs(
+    title = &quot;Top 10 Countries with High Coffee Ratings 
+    (2010-2018)&quot;,
+    x = &quot;Country&quot;,
+    y = &quot;Average Total Cup Points&quot;,
+    fill = &quot;Country&quot;
+  ) </code></pre>
+<p><img src="data_exploration_files/figure-html/unnamed-chunk-2-1.png" width="90%" /></p>
+</div>
+<div
+id="我再想想-differences-between-different-regions-of-coffee-within-the-same-country"
+class="section level3">
+<h3>我再想想 Differences between different regions of coffee within the
+same country</h3>
+<pre class="r"><code>region_analysis =
+  ratings_df |&gt; 
+  group_by(country_of_origin, region) |&gt; 
+  summarize(
+    avg_acidity = mean(acidity, na.rm = TRUE),
+    avg_sweetness = mean(sweetness, na.rm = TRUE)
+  ) 
+
+region_analysis |&gt; 
+  pivot_longer(
+    cols = c(avg_acidity, avg_sweetness), 
+    names_to = &quot;attribute&quot;, 
+    values_to = &quot;value&quot;) |&gt; 
+  ggplot(aes(x = region, y = value, fill = attribute)) +
+  geom_boxplot() +
+  facet_wrap(~country_of_origin)</code></pre>
+<p><img src="data_exploration_files/figure-html/unnamed-chunk-3-1.png" width="90%" /></p>
 </div>
 
 
