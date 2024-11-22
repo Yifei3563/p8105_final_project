@@ -303,6 +303,94 @@ $(document).ready(function () {
          processing_method = as.factor(processing_method),
          moisture = as.factor(moisture),
          color = as.factor(color))</code></pre>
+<div id="exploring-the-data" class="section level3">
+<h3>Exploring the data</h3>
+<div id="analyzing-the-origins-of-top-coffees-each-year"
+class="section level4">
+<h4>Analyzing the origins of top coffees each year</h4>
+<pre class="r"><code>top_origins = 
+  ratings_df |&gt; 
+  group_by(grading_year) |&gt; 
+  arrange(grading_year, desc(total_cup_points)) |&gt; 
+  slice(1)
+
+top_origins |&gt; 
+  arrange(grading_year) |&gt; 
+  select(grading_year, country_of_origin, total_cup_points) |&gt; 
+  knitr::kable(
+    col.names = c(&quot;Year&quot;, &quot;Country of Origin&quot;, &quot;Total Cup Points&quot;),
+    caption = &quot;Top Coffee by Country from 2010 to 2018&quot;,
+  )</code></pre>
+<table>
+<caption>Top Coffee by Country from 2010 to 2018</caption>
+<thead>
+<tr class="header">
+<th align="left">Year</th>
+<th align="left">Country of Origin</th>
+<th align="right">Total Cup Points</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">2010</td>
+<td align="left">Guatemala</td>
+<td align="right">89.75</td>
+</tr>
+<tr class="even">
+<td align="left">2011</td>
+<td align="left">Brazil</td>
+<td align="right">86.92</td>
+</tr>
+<tr class="odd">
+<td align="left">2012</td>
+<td align="left">Peru</td>
+<td align="right">88.75</td>
+</tr>
+<tr class="even">
+<td align="left">2013</td>
+<td align="left">Brazil</td>
+<td align="right">88.83</td>
+</tr>
+<tr class="odd">
+<td align="left">2014</td>
+<td align="left">Costa Rica</td>
+<td align="right">87.17</td>
+</tr>
+<tr class="even">
+<td align="left">2015</td>
+<td align="left">Ethiopia</td>
+<td align="right">90.58</td>
+</tr>
+<tr class="odd">
+<td align="left">2016</td>
+<td align="left">China</td>
+<td align="right">87.25</td>
+</tr>
+<tr class="even">
+<td align="left">2017</td>
+<td align="left">Honduras</td>
+<td align="right">86.67</td>
+</tr>
+<tr class="odd">
+<td align="left">2018</td>
+<td align="left">Kenya</td>
+<td align="right">84.58</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>top_origins |&gt; 
+  ggplot(aes(x = grading_year, y = total_cup_points, fill = country_of_origin)) +
+  geom_col() +
+  labs(
+    title = &quot;Top Coffee by each year by country from 2010 to 2018&quot;,
+    x = &quot;Year&quot;,
+    y = &quot;Total Cup Points&quot;,
+    fill = &quot;Country of Origin&quot;
+  ) +
+  theme_minimal()</code></pre>
+<p><img src="final_project_files/figure-html/unnamed-chunk-2-1.png" width="90%" /></p>
+</div>
+</div>
 </div>
 <div id="survey-dataset" class="section level2">
 <h2>Survey dataset</h2>

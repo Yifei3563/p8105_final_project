@@ -40,6 +40,39 @@ ratings_df = read_csv("data/coffee_ratings.csv") %>%
          color = as.factor(color))
 ```
 
+### Exploring the data
+
+#### Analyzing the origins of top coffees each year
+
+```{r}
+top_origins = 
+  ratings_df |> 
+  group_by(grading_year) |> 
+  arrange(grading_year, desc(total_cup_points)) |> 
+  slice(1)
+
+top_origins |> 
+  arrange(grading_year) |> 
+  select(grading_year, country_of_origin, total_cup_points) |> 
+  knitr::kable(
+    col.names = c("Year", "Country of Origin", "Total Cup Points"),
+    caption = "Top Coffee by Country from 2010 to 2018",
+  )
+
+top_origins |> 
+  ggplot(aes(x = grading_year, y = total_cup_points, fill = country_of_origin)) +
+  geom_col() +
+  labs(
+    title = "Top Coffee by each year by country from 2010 to 2018",
+    x = "Year",
+    y = "Total Cup Points",
+    fill = "Country of Origin"
+  ) +
+  theme_minimal()
+```
+
+
+
 ## Survey dataset
 
 ```{r}
