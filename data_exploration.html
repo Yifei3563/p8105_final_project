@@ -486,6 +486,39 @@ top_10_countries |&gt;
   ) </code></pre>
 <p><img src="data_exploration_files/figure-html/unnamed-chunk-2-1.png" width="90%" /></p>
 </div>
+<div id="distribution-of-coffee-species" class="section level3">
+<h3>Distribution of Coffee Species</h3>
+<pre class="r"><code>ratings_df |&gt; 
+  ggplot(aes(x = species)) +
+  geom_bar(fill = &quot;orange&quot;) +
+  labs(
+    title = &quot;Distribution of Coffee Species&quot;,
+    x = &quot;Species&quot;,
+    y = &quot;Count&quot;
+  ) +
+  theme_minimal()</code></pre>
+<p><img src="data_exploration_files/figure-html/unnamed-chunk-3-1.png" width="90%" /></p>
+</div>
+<div id="distribution-of-processing-methods" class="section level3">
+<h3>Distribution of Processing Methods</h3>
+<pre class="r"><code>ratings_df |&gt; 
+  ggplot(aes(x = processing_method, fill = processing_method)) +
+  geom_bar() +
+  labs(
+    title = &quot;Distribution of Processing Methods&quot;, 
+    x = &quot;Processing Methods&quot;,
+    y = &quot;Count&quot;
+    ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))</code></pre>
+<p><img src="data_exploration_files/figure-html/unnamed-chunk-4-1.png" width="90%" /></p>
+<pre class="r"><code>ratings_df |&gt; 
+  ggplot(aes(x = moisture, y = altitude_mean_meters)) +
+  geom_bin2d(binwidth = c(0.01, 300)) +
+  scale_fill_gradient() +
+  theme_minimal()</code></pre>
+<p><img src="data_exploration_files/figure-html/unnamed-chunk-5-1.png" width="90%" /></p>
+</div>
 <div
 id="我再想想-differences-between-different-regions-of-coffee-within-the-same-country"
 class="section level3">
@@ -507,7 +540,7 @@ region_analysis |&gt;
   ggplot(aes(x = region, y = value, fill = attribute)) +
   geom_boxplot() +
   facet_wrap(~country_of_origin)</code></pre>
-<p><img src="data_exploration_files/figure-html/unnamed-chunk-3-1.png" width="90%" /></p>
+<p><img src="data_exploration_files/figure-html/unnamed-chunk-6-1.png" width="90%" /></p>
 </div>
 
 
