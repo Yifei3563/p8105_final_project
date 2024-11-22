@@ -95,7 +95,22 @@ top_10_countries |>
 ```
 
 
-### 
+### Distribution of Coffee Species
+
+```{r}
+ratings_df |> 
+  ggplot(aes(x = species)) +
+  geom_bar(fill = "orange") +
+  labs(
+    title = "Distribution of Coffee Species",
+    x = "Species",
+    y = "Count"
+  ) +
+  theme_minimal()
+```
+
+
+
 
 ```{r}
 ratings_df |> 
