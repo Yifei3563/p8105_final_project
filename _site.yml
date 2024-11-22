@@ -9,6 +9,8 @@ navbar:
       href: final_project.html
     - text: "Report"
       href: report.html
+    - text: "Data Exploration"
+      href: data_exploration.html
     - icon: fa-envelope fa-lg
       href: mailto:<you@youremail.com>
     - icon: fa-github fa-lg

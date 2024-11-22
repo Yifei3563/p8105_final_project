@@ -9,11 +9,9 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
-<meta name="author" content="Group 43" />
 
-<meta name="date" content="2024-11-21" />
 
-<title>Final Project</title>
+<title>Data Exploration</title>
 
 <script src="site_libs/header-attrs-2.28/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -31,7 +29,11 @@
        h6 {font-size: 12px;}
        code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
        pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 <link href="site_libs/font-awesome-6.4.2/css/all.min.css" rel="stylesheet" />
@@ -220,7 +222,73 @@ $(document).ready(function () {
 </style>
 
 <!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
 
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
 
 
 
@@ -230,6 +298,16 @@ $(document).ready(function () {
 
 
 <div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
 
 
 
@@ -280,37 +358,24 @@ $(document).ready(function () {
 
 <div id="header">
 
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
 
 
-<h1 class="title toc-ignore">Final Project</h1>
-<h4 class="author">Group 43</h4>
-<h4 class="date">2024-11-21</h4>
+
+<h1 class="title toc-ignore">Data Exploration</h1>
 
 </div>
 
 
-<div id="data-importing-and-cleaning" class="section level1">
-<h1>Data Importing and Cleaning</h1>
-<div id="rating-dataset" class="section level2">
-<h2>Rating dataset</h2>
-<pre class="r"><code>ratings_df = read_csv(&quot;data/coffee_ratings.csv&quot;) %&gt;% 
-  janitor::clean_names() %&gt;%
-  select(total_cup_points, species, country_of_origin, 
-         region, number_of_bags, bag_weight, grading_date, variety,
-         processing_method, aroma, flavor, aftertaste, acidity, body, balance,
-         uniformity, clean_cup, sweetness, cupper_points, moisture, color,
-         altitude_low_meters, altitude_high_meters, altitude_mean_meters) %&gt;%
-  mutate(grading_year = str_extract(grading_date, &quot;\\d{4}&quot;),
-         species = as.factor(species),
-         variety = as.factor(variety),
-         processing_method = as.factor(processing_method),
-         moisture = as.factor(moisture),
-         color = as.factor(color))</code></pre>
-<div id="exploring-the-data" class="section level3">
-<h3>Exploring the data</h3>
-<div id="analyzing-the-origins-of-top-coffees-each-year"
-class="section level4">
-<h4>Analyzing the origins of top coffees each year</h4>
+<div id="the-origins-of-top-coffees-each-year-from-2010-to-2018"
+class="section level3">
+<h3>The Origins of Top Coffees Each Year from 2010 to 2018</h3>
 <pre class="r"><code>top_origins = 
   ratings_df |&gt; 
   group_by(grading_year) |&gt; 
@@ -381,60 +446,19 @@ top_origins |&gt;
 </tr>
 </tbody>
 </table>
-<pre class="r"><code>top_origins |&gt; 
-  ggplot(aes(x = grading_year, y = total_cup_points, fill = country_of_origin)) +
-  geom_col() +
-  labs(
-    title = &quot;Top Coffee by each year by country from 2010 to 2018&quot;,
-    x = &quot;Year&quot;,
-    y = &quot;Total Cup Points&quot;,
-    fill = &quot;Country of Origin&quot;
-  ) +
-  theme_minimal()</code></pre>
-<p><img src="final_project_files/figure-html/unnamed-chunk-2-1.png" width="90%" /></p>
-</div>
-</div>
-</div>
-<div id="survey-dataset" class="section level2">
-<h2>Survey dataset</h2>
-<pre class="r"><code>survey = read_csv(&quot;data/coffee_survey.csv&quot;) |&gt;
-  janitor::clean_names() |&gt;
-  select(-purchase_other, -favorite_specify, -additions_other, -prefer_abc, -prefer_ad, 
-         -why_drink_other, -know_source, -value_cafe, -value_equipment, -gender_specify, 
-         -ethnicity_race_specify, -number_children, -political_affiliation, 
-         -coffee_a_notes, -coffee_b_notes, -coffee_c_notes, -coffee_d_notes) |&gt;
-  drop_na(gender) |&gt;
-  mutate_if(is.character, as.factor)</code></pre>
-<pre class="r"><code>survey_tidy = 
-  survey %&gt;% 
-  rename_with(
-    ~ sub(&quot;personal_preference&quot;, &quot;preference&quot;, .),
-    .cols = ends_with(&quot;personal_preference&quot;)
-  ) %&gt;% 
-  pivot_longer(
-    cols = coffee_a_bitterness:coffee_d_preference,
-    values_to = &quot;score&quot;,
-    names_to = c(&quot;coffee_name&quot;, &quot;coffee_feature&quot;),
-    names_pattern = &quot;(.*)_(.*)&quot;
-  ) %&gt;% 
-  pivot_wider(
-    names_from = coffee_feature,
-    values_from = score
-  ) %&gt;% 
-  mutate(
-    coffee_name = case_match(coffee_name,
-                             &quot;coffee_a&quot; ~ &quot;Coffee A&quot;,
-                             &quot;coffee_b&quot; ~ &quot;Coffee B&quot;,
-                             &quot;coffee_c&quot; ~ &quot;Coffee C&quot;,
-                             &quot;coffee_d&quot; ~ &quot;Coffee D&quot;),
-    coffee_name = as.factor(coffee_name)
-  ) %&gt;% 
-  relocate(prefer_overall, .after = everything())</code></pre>
-</div>
+<p>The diversity of countries shows that competition in the coffee
+industry is global, with no single country dominating year after
+year.</p>
+<p>Brazil has been on the list twice (2011 and 2013), indicating that it
+has consistently produced highly rated coffee during this period.</p>
+<p>Ethiopia showed pretty good coffee strength with a top score of 90.58
+in 2015, which is the highest coffee rating in those eight years.</p>
 </div>
 
 
 
+</div>
+</div>
 
 </div>
 
@@ -466,7 +490,41 @@ $(document).ready(function () {
 </script>
 
 <!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
 
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>
