@@ -3,59 +3,63 @@ Final Project
 Group 43
 2024-11-21
 
-``` r
-library(tidyverse)
-```
+# Data Importing and Cleaning
 
-    ## ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-    ## ✔ dplyr     1.1.4     ✔ readr     2.1.5
-    ## ✔ forcats   1.0.0     ✔ stringr   1.5.1
-    ## ✔ ggplot2   3.5.1     ✔ tibble    3.2.1
-    ## ✔ lubridate 1.9.3     ✔ tidyr     1.3.1
-    ## ✔ purrr     1.0.2     
-    ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-    ## ✖ dplyr::filter() masks stats::filter()
-    ## ✖ dplyr::lag()    masks stats::lag()
-    ## ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
+## Rating dataset
 
 ``` r
-library(ggplot2)
-library(modelr)
-library(readxl)
-library(haven)
-```
-
-## Import Data
-
-``` r
-ratings = read_csv("data/coffee_ratings.csv") |> 
-  janitor::clean_names() |> 
-  select(total_cup_points, species, country_of_origin, altitude, 
-         region, number_of_bags, bag_weight, harvest_year, grading_date, variety,
+ratings_df = read_csv("data/coffee_ratings.csv") %>% 
+  janitor::clean_names() %>%
+  select(total_cup_points, species, country_of_origin, 
+         region, number_of_bags, bag_weight, grading_date, variety,
          processing_method, aroma, flavor, aftertaste, acidity, body, balance,
          uniformity, clean_cup, sweetness, cupper_points, moisture, color,
-         altitude_low_meters, altitude_high_meters, altitude_mean_meters)
+         altitude_low_meters, altitude_high_meters, altitude_mean_meters) %>%
+  mutate(grading_year = str_extract(grading_date, "\\d{4}"),
+         species = as.factor(species),
+         variety = as.factor(variety),
+         processing_method = as.factor(processing_method),
+         moisture = as.factor(moisture),
+         color = as.factor(color))
 ```
 
-    ## Rows: 1339 Columns: 43
-    ## ── Column specification ────────────────────────────────────────────────────────
-    ## Delimiter: ","
-    ## chr (24): species, owner, country_of_origin, farm_name, lot_number, mill, ic...
-    ## dbl (19): total_cup_points, number_of_bags, aroma, flavor, aftertaste, acidi...
-    ## 
-    ## ℹ Use `spec()` to retrieve the full column specification for this data.
-    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+## Survey dataset
 
 ``` r
-survey = read_csv("data/coffee_survey.csv") |> 
-  janitor::clean_names()
+survey = read_csv("data/coffee_survey.csv") |>
+  janitor::clean_names() |>
+  select(-purchase_other, -favorite_specify, -additions_other, -prefer_abc, -prefer_ad, 
+         -why_drink_other, -know_source, -value_cafe, -value_equipment, -gender_specify, 
+         -ethnicity_race_specify, -number_children, -political_affiliation, 
+         -coffee_a_notes, -coffee_b_notes, -coffee_c_notes, -coffee_d_notes) |>
+  drop_na(gender) |>
+  mutate_if(is.character, as.factor)
 ```
 
-    ## Rows: 4042 Columns: 57
-    ## ── Column specification ────────────────────────────────────────────────────────
-    ## Delimiter: ","
-    ## chr (44): submission_id, age, cups, where_drink, brew, brew_other, purchase,...
-    ## dbl (13): expertise, coffee_a_bitterness, coffee_a_acidity, coffee_a_persona...
-    ## 
-    ## ℹ Use `spec()` to retrieve the full column specification for this data.
-    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+``` r
+survey_tidy = 
+  survey %>% 
+  rename_with(
+    ~ sub("personal_preference", "preference", .),
+    .cols = ends_with("personal_preference")
+  ) %>% 
+  pivot_longer(
+    cols = coffee_a_bitterness:coffee_d_preference,
+    values_to = "score",
+    names_to = c("coffee_name", "coffee_feature"),
+    names_pattern = "(.*)_(.*)"
+  ) %>% 
+  pivot_wider(
+    names_from = coffee_feature,
+    values_from = score
+  ) %>% 
+  mutate(
+    coffee_name = case_match(coffee_name,
+                             "coffee_a" ~ "Coffee A",
+                             "coffee_b" ~ "Coffee B",
+                             "coffee_c" ~ "Coffee C",
+                             "coffee_d" ~ "Coffee D"),
+    coffee_name = as.factor(coffee_name)
+  ) %>% 
+  relocate(prefer_overall, .after = everything())
+```
