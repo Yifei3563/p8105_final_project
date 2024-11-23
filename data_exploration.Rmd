@@ -113,38 +113,31 @@ ratings_df |>
 
 ```{r}
 ratings_df |> 
-  ggplot(aes(x = processing_method, fill = processing_method)) +
-  geom_bar() +
-  labs(
-    title = "Distribution of Processing Methods", 
-    x = "Processing Methods",
-    y = "Count"
-    ) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  count(processing_method) |> 
+  slice_head(n = 10) |> 
+  ggplot(aes(x = reorder(processing_method, n), y = n, fill = processing_method)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Top Processing Methods", x = "Processing Method", y = "Count") +
+  coord_flip() +
+  theme_minimal()
 ```
 
-### Trend of Average Total Cup Points Over Years
+
+### Distribution of Total Cup Points by Species
 
 ```{r}
-yearly_trends = 
-  ratings_df |> 
-  group_by(grading_year) |> 
-  summarize(avg_cup_points = mean(total_cup_points, na.rm = TRUE)) 
-
-yearly_trends |> 
-  plot_ly(x = ~ grading_year,
-          y = ~ avg_cup_points,
-          type = "scatter",
-          mode = "markers") |> 
-  layout(
-    title = "Trend of Average Total Cup Points Over Years",
-    xaxis = list(title = "Year"),
-    yaxis = list(title = "Average Total Cup Points")
-  )
+ratings_df |> 
+  ggplot(aes(x = species, y = total_cup_points, fill = species)) +
+  geom_boxplot() +
+  labs(title = "Distribution of Total Cup Points by Species",
+       x = "Species", 
+       y = "Total Cup Points") +
+  theme_minimal()
 
 ```
 
+
+### 
 
 
 ```{r}
