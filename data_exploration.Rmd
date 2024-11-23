@@ -13,6 +13,7 @@ library(ggplot2)
 library(modelr)
 library(haven)
 library(plotly)
+library(factoextra)
 
 knitr::opts_chunk$set(
   fig.width = 6,
@@ -109,42 +110,70 @@ ratings_df |>
   theme_minimal()
 ```
 
-### Distribution of Processing Methods
+### Proportion of Processing Methods
 
 ```{r}
 ratings_df |> 
   count(processing_method) |> 
-  slice_head(n = 10) |> 
-  ggplot(aes(x = reorder(processing_method, n), y = n, fill = processing_method)) +
-  geom_bar(stat = "identity") +
-  labs(title = "Top Processing Methods", x = "Processing Method", y = "Count") +
+  mutate(prop = n / sum(n)) |> 
+  ggplot(aes(x = reorder(processing_method, prop), 
+             y = prop, fill = processing_method)) +
+  geom_col() +
   coord_flip() +
+  labs(title = "Proportion of Processing Methods", 
+       x = "Processing Method", 
+       y = "Proportion") +
   theme_minimal()
 ```
+
+### Total Cup Points by Processing Methods
+
+```{r}
+ratings_df |> 
+  ggplot(aes(x = processing_method, y = total_cup_points, fill = processing_method)) +
+  geom_boxplot() +
+  labs(title = "Total Cup Points by Processing Methods", 
+       x = "Processing Method", 
+       y = "Total Cup Points") +
+  theme_minimal() +
+  coord_flip()
+```
+
 
 
 ### Distribution of Total Cup Points by Species
 
 ```{r}
 ratings_df |> 
-  ggplot(aes(x = species, y = total_cup_points, fill = species)) +
-  geom_boxplot() +
-  labs(title = "Distribution of Total Cup Points by Species",
-       x = "Species", 
-       y = "Total Cup Points") +
-  theme_minimal()
-
+  plot_ly(x = ~ species, y = ~ total_cup_points, type = "box", color = ~species) |> 
+   layout(title = "Boxplot of Total Cup Points by Species",
+         xaxis = list(title = "Species"),
+         yaxis = list(title = "Total Cup Points"))
 ```
 
 
-### 
+```{r}
+yearly_data = ratings_df |> 
+  group_by(grading_year) |> 
+  summarise(avg_total_cup_points = mean(total_cup_points, na.rm = TRUE)) |> 
+  plot_ly(x = ~ grading_year, y = ~ avg_total_cup_points, type = "scatter", 
+          mode = "lines+markers") |> 
+  layout(title = "Trend of Average Total Cup Points Over Years",
+         xaxis = list(title = "Year"),
+         yaxis = list(title = "Average Total Cup Points"))
+```
+
+
+
 
 
 ```{r}
 ratings_df |> 
-  ggplot(aes(x = moisture, y = altitude_mean_meters)) +
-  geom_bin2d(binwidth = c(0.01, 300)) +
-  scale_fill_gradient() +
+  filter(country_of_origin %in% c("Ethiopia", "Colombia", "Brazil")) |> 
+  ggplot(aes(x = country_of_origin, y = aroma, fill = country_of_origin)) +
+  geom_boxplot() +
+  labs(title = "Distribution of Aroma Ratings by Country",
+       x = "Country", y = "Aroma") +
   theme_minimal()
 ```
 
