@@ -124,6 +124,27 @@ ratings_df |>
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
+### Trend of Average Total Cup Points Over Years
+
+```{r}
+yearly_trends = 
+  ratings_df |> 
+  group_by(grading_year) |> 
+  summarize(avg_cup_points = mean(total_cup_points, na.rm = TRUE)) 
+
+yearly_trends |> 
+  plot_ly(x = ~ grading_year,
+          y = ~ avg_cup_points,
+          type = "scatter",
+          mode = "markers") |> 
+  layout(
+    title = "Trend of Average Total Cup Points Over Years",
+    xaxis = list(title = "Year"),
+    yaxis = list(title = "Average Total Cup Points")
+  )
+
+```
+
 
 
 ```{r}
