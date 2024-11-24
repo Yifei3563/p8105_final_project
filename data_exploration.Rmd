@@ -83,7 +83,27 @@ ggplotly(variety_dis)
 ```
 
 
+### The Boxplot of Variety and Total Cup Points (drop outliers)
 
+
+```{r}
+ratings_df |> 
+  mutate(variety = fct_reorder(variety, total_cup_points)) |> 
+  plot_ly(
+    y = ~total_cup_points, 
+    color = ~variety, 
+    type = "box", 
+    colors = "viridis"
+  ) %>%
+  layout(
+    yaxis = list(
+      title = "Total Cup Points",
+      range = c(60, NA) 
+    ),
+    xaxis = list(
+      title = "Variety"
+    ))
+```
 
 
 
