@@ -42,6 +42,24 @@ ratings_df = read_csv("data/coffee_ratings.csv") %>%
 
 ### Exploring the data
 
+
+#### The Distribution of the Total Cup Points
+
+```{r}
+points_dis = ggplot(ratings_df, aes(x = total_cup_points)) +
+  geom_histogram(binwidth = 1, fill = "skyblue", color = "black") +
+  coord_cartesian(xlim = c(60, NA)) +
+  theme_minimal() +
+  labs(title = "Total Cup Points Distribution", x = "Total Cup Points", y = "Frequency")
+
+ggplotly(points_dis)
+```
+
+
+
+
+
+
 #### Analyzing the origins of top coffees each year
 
 ```{r}
