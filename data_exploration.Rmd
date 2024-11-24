@@ -40,7 +40,7 @@ ratings_df = read_csv("data/coffee_ratings.csv") %>%
 
 ```
 
-### The Origins of Top Coffees Each Year from 2010 to 2018
+### The Origins of Top Coffees Each Year from 2010 to 2018 + species + variety
 
 ```{r}
 top_origins_yearly = 
@@ -126,10 +126,11 @@ ratings_df |>
   theme_minimal()
 ```
 
-### Total Cup Points by Processing Methods
+### Total Cup Points by Processing Methods 改成plot_ly 和outlier
 
 ```{r}
 ratings_df |> 
+  drop_na(total_cup_points, processing_method) |> 
   ggplot(aes(x = processing_method, y = total_cup_points, fill = processing_method)) +
   geom_boxplot() +
   labs(title = "Total Cup Points by Processing Methods", 
@@ -141,7 +142,7 @@ ratings_df |>
 
 
 
-### Distribution of Total Cup Points by Species
+### Distribution of Total Cup Points by Species drop na
 
 ```{r}
 ratings_df |> 
