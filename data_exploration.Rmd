@@ -22,7 +22,10 @@ knitr::opts_chunk$set(
   warning = FALSE,
   message = FALSE
 )
+```
 
+
+```{r}
 ratings_df = read_csv("data/coffee_ratings.csv") %>% 
   janitor::clean_names() %>%
   select(total_cup_points, species, country_of_origin, 
@@ -36,9 +39,33 @@ ratings_df = read_csv("data/coffee_ratings.csv") %>%
          processing_method = as.factor(processing_method),
          moisture = as.factor(moisture),
          color = as.factor(color))
-
-
 ```
+
+
+
+
+
+### The Distribution of the Total Cup Points
+
+```{r}
+points_dis = ggplot(ratings_df, aes(x = total_cup_points)) +
+  geom_histogram(binwidth = 1, fill = "skyblue", color = "black") +
+  coord_cartesian(xlim = c(60, NA)) +
+  theme_minimal() +
+  labs(title = "Total Cup Points Distribution", x = "Total Cup Points", y = "Frequency")
+
+ggplotly(points_dis)
+```
+
+
+
+
+
+
+
+
+
+
 
 ### The Origins of Top Coffees Each Year from 2010 to 2018 + species + variety
 
