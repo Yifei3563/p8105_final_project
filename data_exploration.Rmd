@@ -58,7 +58,29 @@ ggplotly(points_dis)
 ```
 
 
+### The Distribution of Varieties by Species
 
+
+```{r}
+variety_dis = ratings_df %>%
+  filter(!is.na(variety)) %>%
+  ggplot(aes(x = fct_rev(fct_infreq(variety)))) +
+  geom_bar(fill = "skyblue") +
+  facet_grid(~ species, scales = "free_x") +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5, size = 8),
+    strip.text = element_text(size = 10)
+  ) +
+  labs(
+    title = "Frequency of Varieties by Species",
+    x = "Variety",
+    y = "Count"
+  )
+
+
+ggplotly(variety_dis)
+```
 
 
 
