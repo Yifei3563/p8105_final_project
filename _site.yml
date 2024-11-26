@@ -7,16 +7,18 @@ navbar:
       href: about.html
     - text: "Data Exploration"
       menu:
-        - text: "Ratings"
+        - text: "Ratings Data"
           href: data_exploration_ratings.html
-        - text: "Survey"
+        - text: "Survey Data"
           href: data_exploration_survey.html
     - text: "Analysis"
       menu:
-        - text: "Ratings"
+        - text: "Ratings Data"
           href: analysis_ratings.html
-        - text: "Survey"
+        - text: "Survey Data"
           href: analysis_survey.html
+        - text: "General Analysis"
+          href: general_analysis.html
     - text: "Report"
       href: report.html
     - text: "Shiny"

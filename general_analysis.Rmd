@@ -1,0 +1,37 @@
+---
+title: "General Analysis"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+
+---
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(modelr)
+library(haven)
+library(plotly)
+library(factoextra)
+
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%",
+  warning = FALSE,
+  message = FALSE
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+```
+
+
