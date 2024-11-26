@@ -11,7 +11,7 @@
 
 
 
-<title>Project Report</title>
+<title>Data Exploration</title>
 
 <script src="site_libs/header-attrs-2.28/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -33,6 +33,7 @@
 <link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
 <script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 <link href="site_libs/font-awesome-6.4.2/css/all.min.css" rel="stylesheet" />
@@ -221,6 +222,9 @@ $(document).ready(function () {
 </style>
 
 <!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
 
 
 
@@ -381,57 +385,55 @@ div.tocify {
 
 <div id="header">
 
-
-
-<h1 class="title toc-ignore">Project Report</h1>
-
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
 </div>
 
 
-<div id="motivation" class="section level2">
-<h2>Motivation</h2>
-<p>Since the beginning of the 20th century, coffee has transcended
-national boundaries and catered to the tastes of diverse groups of
-people. As a group of coffee lovers, we are well-realized about how
-important a good cup of coffee can be for a fulfilling day. Therefore,
-we wish to analyze the quality of coffee from two aspects – the
-objective geographical factors and subjective costumer preferences.</p>
+
+<h1 class="title toc-ignore">Data Exploration</h1>
+
 </div>
-<div id="data-source" class="section level2">
-<h2>Data Source</h2>
-<p>The project utilizes the data from the <a
-href="https://database.coffeeinstitute.org/">Coffee Quality
-Institute</a> (the original data can be found on <a
-href="https://github.com/jldbc/coffee-quality-database">James LeDoux’s
-github</a>) to rate coffee based on their acidity, sweetness, aroma,
-altitude, and region, offering a comprehensive look at coffee. By
-incorporating data on the <a
-href="https://www.youtube.com/watch?v=bMOOQfeloH0">“Great American
-Coffee Taste Test”</a>, our project also explores how consumer tastes
-align with professional ratings. This combination of objective and
-public data can provide insights into how coffee qualities influence
-consumer preferences, helping producers, coffee shops, and consumers
-make their favorite choices.</p>
-</div>
-<div id="initial-questions" class="section level2">
-<h2>Initial Questions</h2>
-<p>We hope to obtain a comprehensive view on both the objective factors
-that influence the taste of the coffee (e.g. species, altitude) and how
-features of different populations affect their subjective preferences
-for coffee (e.g. gender, education level). Some possible questions
-include: - How much people would pay for a cup of coffee based on their
-quality? - Does the public taste of coffee accord with the “official”
-level of certification? - What is the difference between coffees from
-different regions within the same country？ - What are the countries
-with high coffee ratings in general? _ The relationship between altitude
-and coffee characteristics.</p>
-</div>
-<div id="exploratory-analysis" class="section level2">
-<h2>Exploratory Analysis</h2>
-</div>
-<div id="discussion" class="section level2">
-<h2>Discussion</h2>
-</div>
+
+
+<pre class="r"><code>survey = read_csv(&quot;data/coffee_survey.csv&quot;) |&gt;
+  janitor::clean_names() |&gt;
+  select(-purchase_other, -favorite_specify, -additions_other, -prefer_abc, -prefer_ad, 
+         -why_drink_other, -know_source, -value_cafe, -value_equipment, -gender_specify, 
+         -ethnicity_race_specify, -number_children, -political_affiliation, 
+         -coffee_a_notes, -coffee_b_notes, -coffee_c_notes, -coffee_d_notes) |&gt;
+  drop_na(gender) |&gt;
+  mutate_if(is.character, as.factor)</code></pre>
+<pre class="r"><code>survey_tidy = 
+  survey %&gt;% 
+  rename_with(
+    ~ sub(&quot;personal_preference&quot;, &quot;preference&quot;, .),
+    .cols = ends_with(&quot;personal_preference&quot;)
+  ) %&gt;% 
+  pivot_longer(
+    cols = coffee_a_bitterness:coffee_d_preference,
+    values_to = &quot;score&quot;,
+    names_to = c(&quot;coffee_name&quot;, &quot;coffee_feature&quot;),
+    names_pattern = &quot;(.*)_(.*)&quot;
+  ) %&gt;% 
+  pivot_wider(
+    names_from = coffee_feature,
+    values_from = score
+  ) %&gt;% 
+  mutate(
+    coffee_name = case_match(coffee_name,
+                             &quot;coffee_a&quot; ~ &quot;Coffee A&quot;,
+                             &quot;coffee_b&quot; ~ &quot;Coffee B&quot;,
+                             &quot;coffee_c&quot; ~ &quot;Coffee C&quot;,
+                             &quot;coffee_d&quot; ~ &quot;Coffee D&quot;),
+    coffee_name = as.factor(coffee_name)
+  ) %&gt;% 
+  relocate(prefer_overall, .after = everything())</code></pre>
+<p>```</p>
 
 
 
@@ -468,6 +470,11 @@ $(document).ready(function () {
 </script>
 
 <!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
 
 <script>
 $(document).ready(function ()  {

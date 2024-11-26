@@ -1,0 +1,82 @@
+---
+title: "Data Exploration"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+
+---
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(modelr)
+library(haven)
+library(plotly)
+library(factoextra)
+
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%",
+  warning = FALSE,
+  message = FALSE
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+```
+
+
+```{r}
+survey = read_csv("data/coffee_survey.csv") |>
+  janitor::clean_names() |>
+  select(-purchase_other, -favorite_specify, -additions_other, -prefer_abc, -prefer_ad, 
+         -why_drink_other, -know_source, -value_cafe, -value_equipment, -gender_specify, 
+         -ethnicity_race_specify, -number_children, -political_affiliation, 
+         -coffee_a_notes, -coffee_b_notes, -coffee_c_notes, -coffee_d_notes) |>
+  drop_na(gender) |>
+  mutate_if(is.character, as.factor)
+```
+
+```{r}
+survey_tidy = 
+  survey %>% 
+  rename_with(
+    ~ sub("personal_preference", "preference", .),
+    .cols = ends_with("personal_preference")
+  ) %>% 
+  pivot_longer(
+    cols = coffee_a_bitterness:coffee_d_preference,
+    values_to = "score",
+    names_to = c("coffee_name", "coffee_feature"),
+    names_pattern = "(.*)_(.*)"
+  ) %>% 
+  pivot_wider(
+    names_from = coffee_feature,
+    values_from = score
+  ) %>% 
+  mutate(
+    coffee_name = case_match(coffee_name,
+                             "coffee_a" ~ "Coffee A",
+                             "coffee_b" ~ "Coffee B",
+                             "coffee_c" ~ "Coffee C",
+                             "coffee_d" ~ "Coffee D"),
+    coffee_name = as.factor(coffee_name)
+  ) %>% 
+  relocate(prefer_overall, .after = everything())
+```
+
+
+
+
+
+```
+
