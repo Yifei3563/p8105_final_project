@@ -141,11 +141,11 @@ This plot shows the species and variety composition of the sample coffee beans. 
 
 
 
-### The Boxplot of Variety and Total Cup Points (drop outliers)
+### The Boxplot of Variety and Total Cup Points
 
 
 ```{r}
-ratings_df |> 
+ratings_no_outliers |> 
   mutate(variety = fct_reorder(variety, total_cup_points)) |> 
   plot_ly(
     y = ~total_cup_points, 
@@ -156,12 +156,17 @@ ratings_df |>
   layout(
     yaxis = list(
       title = "Total Cup Points",
-      range = c(60, NA) 
+      range = c(50, NA) 
     ),
     xaxis = list(
       title = "Variety"
     ))
 ```
+
+
+Through this boxplot, we can know that varieties Sumatra Lintong and Sumatra tend to performed better than the others on the total cup points, when Pache Comun and Java performed the worst. It is worth mentioning that, the IQR of the total cup points of Java is the largest, which means the cup points of Java have high variability and are more spread out around the median.
+
+
 
 
 ### Distribution of Total Cup Points by Species
