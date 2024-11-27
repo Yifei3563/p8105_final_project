@@ -71,7 +71,7 @@ Some possible questions include:
 
 - What are the countries with high coffee ratings in general?
 
-_ The relationship between altitude and coffee characteristics.
+- The relationship between altitude and coffee characteristics.
 
 ## Exploratory Analysis
 
