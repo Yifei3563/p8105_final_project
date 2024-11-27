@@ -14,7 +14,6 @@ library(modelr)
 library(haven)
 library(dplyr)
 library(plotly)
-#library(factoextra)
 
 knitr::opts_chunk$set(
   fig.width = 6,
