@@ -133,15 +133,6 @@ lasso_fit |> broom::tidy()
 
 
 
-```{r}
-xplot = ggplot(ratings_df, aes(x = altitude_mean_meters, y = total_cup_points)) +
-  geom_point(alpha = 0.6) +
-  theme_minimal() +
-  labs(title = "Altitude vs. Total Cup Points", x = "Mean Altitude (meters)", y = "Total Cup Points")
-
-ggplotly(xplot)
-```
-
 
 
 
