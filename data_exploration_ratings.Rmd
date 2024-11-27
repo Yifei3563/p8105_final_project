@@ -57,15 +57,15 @@ ratings_df = read_csv("data/coffee_ratings.csv") %>%
 
 
 ```{r}
-Q1_tcup = quantile(ratings_filtered$total_cup_points, 0.25, na.rm = TRUE)
-Q3_tcup = quantile(ratings_filtered$total_cup_points, 0.75, na.rm = TRUE)
+Q1_tcup = quantile(ratings_df$total_cup_points, 0.25, na.rm = TRUE)
+Q3_tcup = quantile(ratings_df$total_cup_points, 0.75, na.rm = TRUE)
 IQR_tcup = Q3_tcup - Q1_tcup
 
 lower_bound_tcup = Q1_tcup - 1.5 * IQR_tcup
 upper_bound_tcup = Q3_tcup + 1.5 * IQR_tcup
 
-Q1_alt = quantile(ratings_filtered$altitude_mean_meters, 0.25, na.rm = TRUE)
-Q3_alt = quantile(ratings_filtered$altitude_mean_meters, 0.75, na.rm = TRUE)
+Q1_alt = quantile(ratings_df$altitude_mean_meters, 0.25, na.rm = TRUE)
+Q3_alt = quantile(ratings_df$altitude_mean_meters, 0.75, na.rm = TRUE)
 IQR_alt = Q3_alt - Q1_alt
 
 lower_bound_alt = Q1_alt - 1.5 * IQR_alt
@@ -90,6 +90,11 @@ points_dis = ggplot(ratings_df, aes(x = total_cup_points)) +
 
 ggplotly(points_dis)
 ```
+
+
+The distribution of total cup points is bell-shaped and similar to the normal distribution. The total cup points of 83 is the most frequent, and most coffee beans are in the 80 to 85 range.
+
+
 
 
 ### Trend of Average Total Cup Points Over Years
