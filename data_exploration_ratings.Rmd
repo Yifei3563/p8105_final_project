@@ -14,6 +14,10 @@ library(modelr)
 library(haven)
 library(dplyr)
 library(plotly)
+library(readr)
+library(forcats)
+library(corrplot)
+library(glmnet)
 
 knitr::opts_chunk$set(
   fig.width = 6,
@@ -52,7 +56,27 @@ ratings_df = read_csv("data/coffee_ratings.csv") %>%
 ```
 
 
+```{r}
+Q1_tcup = quantile(ratings_filtered$total_cup_points, 0.25, na.rm = TRUE)
+Q3_tcup = quantile(ratings_filtered$total_cup_points, 0.75, na.rm = TRUE)
+IQR_tcup = Q3_tcup - Q1_tcup
 
+lower_bound_tcup = Q1_tcup - 1.5 * IQR_tcup
+upper_bound_tcup = Q3_tcup + 1.5 * IQR_tcup
+
+Q1_alt = quantile(ratings_filtered$altitude_mean_meters, 0.25, na.rm = TRUE)
+Q3_alt = quantile(ratings_filtered$altitude_mean_meters, 0.75, na.rm = TRUE)
+IQR_alt = Q3_alt - Q1_alt
+
+lower_bound_alt = Q1_alt - 1.5 * IQR_alt
+upper_bound_alt = Q3_alt + 1.5 * IQR_alt
+
+ratings_no_outliers = ratings_df %>%
+  filter(
+    total_cup_points >= lower_bound_tcup & total_cup_points <= upper_bound_tcup,
+    altitude_mean_meters >= lower_bound_alt & altitude_mean_meters <= upper_bound_alt
+  )
+```
 
 
 ### The Distribution of the Total Cup Points
