@@ -14,6 +14,51 @@ Since the beginning of the 20th century, coffee has transcended national boundar
 
 The project utilizes the data from the [Coffee Quality Institute](https://database.coffeeinstitute.org/) (the original data can be found on [James LeDoux's github](https://github.com/jldbc/coffee-quality-database)) to rate coffee based on their acidity, sweetness, aroma, altitude, and region, offering a comprehensive look at coffee. By incorporating data on the ["Great American Coffee Taste Test"](https://www.youtube.com/watch?v=bMOOQfeloH0), our project also explores how consumer tastes align with professional ratings. This combination of objective and public data can provide insights into how coffee qualities influence consumer preferences, helping producers, coffee shops, and consumers make their favorite choices.
 
+To make it easier to analyze the data, we named the coffee quality ratings dataset `ratings_df`. There are many variables in this dataset, and after careful consideration in relation to our project questions, we have selected the following variables for this project:
+
+* `total_cup_points`: Total rating/points (0 - 100 scale)
+
+* `species`: Species of coffee bean (arabica or robusta)
+
+* `country_of_origin`: Where the bean came from
+
+* `variety`: Variety of the beans
+
+* `grading_date`: When the beans were graded
+
+* `processing_method`: Method for processing
+
+* `aroma`: Aroma grade
+
+* `flavor`: Flavor grade
+
+* `aftertaste`: Aftertaste grade
+
+* `acidity`: Acidity grade
+
+* `body`: Body grade
+
+* `balance`: Balance grade
+
+* `Uniformity grade`: Uniformity grade
+
+* `clean_cup`: Clean cup grade
+
+* `sweetness`: Sweetness grade
+
+* `cupper_points`: Cupper Points
+
+* `moisture`: Moisture Grade
+
+* `color`: Color of bean
+
+* `altitude_low_meters`: Altitude low meters
+
+* `altitude_high_meters`: Altitude high meters
+
+* `altitude_mean_meters`: Altitude mean meters
+
+
 ## Initial Questions
 
 We hope to obtain a comprehensive view on both the objective factors that influence the taste of the coffee (e.g. species, altitude) and how features of different populations affect their subjective preferences for coffee (e.g. gender, education level). 
