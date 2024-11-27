@@ -75,6 +75,67 @@ corrplot(corr_matrix, method = "number", type = "upper", tl.cex = 0.8)
 Before building the model, we performed the correlation test between these variables. We found a high correlation between almost all independent variables and the dependent variable, and although the correlation between sweetness and total cup points was the lowest, there was still some correlation. Since there were so many predictors, we would choose to build a lasso model.
 
 
+## Lasso Model
+
+
+```{r}
+x = as.matrix(ratings_df[, features])
+y = ratings_df |> pull(total_cup_points)
+```
+
+
+
+```{r}
+lambda = 10^(seq(-2, 2.75, 0.1))
+
+lasso_fit =
+  glmnet(x, y, lambda = lambda)
+
+lasso_cv =
+  cv.glmnet(x, y, lambda = lambda)
+
+lambda_opt = lasso_cv[["lambda.min"]]
+```
+
+
+
+```{r}
+lasso_fit |> 
+  broom::tidy() |> 
+  select(term, lambda, estimate) |> 
+  complete(term, lambda, fill = list(estimate = 0) ) |> 
+  filter(term != "(Intercept)") |> 
+  ggplot(aes(x = lambda, y = estimate, group = term, color = term)) + 
+  geom_path() + 
+  geom_vline(xintercept = lambda_opt, color = "blue", linewidth = 1.2) +
+  theme(legend.position = "none")
+```
+
+
+```{r}
+lasso_cv |> 
+  broom::tidy() |> 
+  ggplot(aes(x = log(lambda, 10), y = estimate)) + 
+  geom_point()
+```
+
+
+```{r}
+lasso_fit = glmnet(x, y, lambda = lambda_opt)
+
+lasso_fit |> broom::tidy()
+```
+
+
+
+```{r}
+xplot = ggplot(ratings_df, aes(x = altitude_mean_meters, y = total_cup_points)) +
+  geom_point(alpha = 0.6) +
+  theme_minimal() +
+  labs(title = "Altitude vs. Total Cup Points", x = "Mean Altitude (meters)", y = "Total Cup Points")
+
+ggplotly(xplot)
+```
 
 
 
