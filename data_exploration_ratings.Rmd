@@ -137,6 +137,10 @@ ggplotly(variety_dis)
 ```
 
 
+This plot shows the species and variety composition of the sample coffee beans. Almost all coffee beans are Arabica, and among the Arabica species, Caturra, Bourbon, and Typica are the most abundant.
+
+
+
 ### The Boxplot of Variety and Total Cup Points (drop outliers)
 
 
