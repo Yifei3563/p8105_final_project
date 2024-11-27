@@ -14,6 +14,11 @@ library(modelr)
 library(haven)
 library(plotly)
 library(factoextra)
+library(readr)
+library(dplyr)
+library(forcats)
+library(corrplot)
+library(glmnet)
 
 knitr::opts_chunk$set(
   fig.width = 6,
