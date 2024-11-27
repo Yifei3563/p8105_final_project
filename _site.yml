@@ -24,6 +24,15 @@ navbar:
     - text: "Shiny"
       href: shiny.html
     - icon: fa-envelope fa-lg
+      menu:
+        - text: "Yuechu Hu"
+          href: "mailto:yh3822@cumc.columbia.edu"
+        - text: "Leyang Rui"
+          href: "mailto:lr3257@cumc.columbia.edu"
+        - text: "Yifei Yu"
+          href: "mailto:yy3563@cumc.columbia.edu"
+        - text: "Jinghan Zhao"
+          href: "mailto:jz3902@cumc.columbia.edu"
       href: mailto:<you@youremail.com>
     - icon: fa-github fa-lg
       href: https://github.com/Yifei3563/p8105_final_project
