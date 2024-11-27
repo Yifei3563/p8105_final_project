@@ -81,6 +81,7 @@ ratings_df |>
          yaxis = list(title = "Average Total Cup Points"))
 ```
 
+Overall, the graph shows a non-linear trend in the average total cup points over the 8 years, with notable dips in 2012 and 2017. The years 2010 and 2018 exhibit the highest average total cup points.
 
 ### The Distribution of Variety by Species
 
@@ -147,6 +148,8 @@ ratings_df |>
          yaxis = list(title = "Total Cup Points"))
 ```
 
+We removed outliers by using the interquartile range (IQR) method to identify and filter extreme values. After removing outliers, the boxplot shows a more compact and representative distribution for both Arabica and Robusta species. The general trends remain the same, with Arabica having a slightly higher median and a wider data range than Robusta.
+
 ### Proportion of Processing Methods
 
 ```{r}
@@ -166,6 +169,7 @@ ratings_df |>
   )
 ```
 
+In our dataset, Washed/Wet processing method dominates the distribution, accounting for about 60%. Natural/Dry processing also has a notable share, while other methods, including Semi-washed, Other, and Pulped Natural/Honey, are much less commonly used.  
 
 ### Total Cup Points by Processing Methods
 
@@ -196,6 +200,7 @@ without_outliers |>
   )
 ```
 
+The Natural/Dry processing method tends to yield the highest median and total cup points, suggesting its potential for producing higher-quality coffee. The Pulped Natural/Honey and Semi-washed/Semi-pulped methods have narrower distributions, indicating less variability in cup points. The Washed/Wet method is also consistent, with a median similar to Semi-washed but a slightly broader spread. Therefore, the differences in quality (as measured by total cup points) is associated with various processing methods, with Natural/Dry generally performing better scores.
 
 ### The Distribution between Total Cup Points and Altitude by Variety （drop outliers）
 
@@ -261,8 +266,8 @@ top_origins_yearly |>
   )
 ```
 
-The diversity of countries shows that competition in the coffee industry is global, with no single country dominating year after year.
+The diversity of countries shows that competition in the coffee industry is global, with no single country dominating year after year. 
 
-Brazil has been on the list twice (2011 and 2013), indicating that it has consistently produced highly rated coffee during this period.
+Brazil has been on the list twice (2011 and 2013), indicating that it has consistently produced highly rated coffee during this period. 
 
 Ethiopia showed pretty good coffee strength with a top score of 90.58 in 2015, which is the highest coffee rating in those eight years.
