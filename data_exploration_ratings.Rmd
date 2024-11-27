@@ -12,8 +12,9 @@ library(tidyverse)
 library(ggplot2)
 library(modelr)
 library(haven)
+library(dplyr)
 library(plotly)
-library(factoextra)
+#library(factoextra)
 
 knitr::opts_chunk$set(
   fig.width = 6,
@@ -68,7 +69,21 @@ ggplotly(points_dis)
 ```
 
 
-### The Distribution of Varieties by Species
+### Trend of Average Total Cup Points Over Years
+
+```{r}
+ratings_df |> 
+  group_by(grading_year) |> 
+  summarise(avg_total_cup_points = mean(total_cup_points, na.rm = TRUE)) |> 
+  plot_ly(x = ~ grading_year, y = ~ avg_total_cup_points, type = "scatter", 
+          mode = "lines + markers") |> 
+  layout(title = "Trend of Average Total Cup Points Over Years",
+         xaxis = list(title = "Year"),
+         yaxis = list(title = "Average Total Cup Points"))
+```
+
+
+### The Distribution of Variety by Species
 
 
 ```{r}
@@ -116,77 +131,21 @@ ratings_df |>
 ```
 
 
-
-
-
-### The Origins of Top Coffees Each Year from 2010 to 2018 + species + variety
+### Distribution of Total Cup Points by Species
 
 ```{r}
-top_origins_yearly = 
-  ratings_df |> 
-  group_by(grading_year) |> 
-  arrange(grading_year, desc(total_cup_points)) |> 
-  slice(1)
+Q1 <- quantile(ratings_df$total_cup_points, 0.25)
+Q3 <- quantile(ratings_df$total_cup_points, 0.75)
+IQR <- Q3 - Q1
+ratings_df <- ratings_df %>%
+  filter(total_cup_points > (Q1 - 1.5 * IQR) & total_cup_points < (Q3 + 1.5 * IQR))
 
-top_origins_yearly |> 
-  arrange(grading_year) |> 
-  select(grading_year, country_of_origin, total_cup_points) |> 
-  knitr::kable(
-    col.names = c("Year", "Country of Origin", "Total Cup Points"),
-    caption = "Top Coffee by Country from 2010 to 2018",
-  )
-```
-
-The diversity of countries shows that competition in the coffee industry is global, with no single country dominating year after year.
-
-Brazil has been on the list twice (2011 and 2013), indicating that it has consistently produced highly rated coffee during this period.
-
-Ethiopia showed pretty good coffee strength with a top score of 90.58 in 2015, which is the highest coffee rating in those eight years.
-
-
-### Top 10 Countries with High Coffee Ratings Within the Eight Years
-
-```{r}
-top_10_countries = 
-  ratings_df |> 
-  group_by(country_of_origin) |> 
-  summarize(
-    avg_total_cup_points = mean(total_cup_points, na.rm = TRUE),
-    total_cup_points = sum(total_cup_points, na.rm = TRUE),
-    num_entries = n()
-  ) |> 
-  arrange(desc(avg_total_cup_points)) |> 
-  slice_head(n = 10)
-
-top_10_countries |> 
-  ggplot(aes(x = reorder(country_of_origin, avg_total_cup_points),
-             y = avg_total_cup_points,
-             fill = country_of_origin)) +
-  geom_col() +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
-  labs(
-    title = "Top 10 Countries with High Coffee Ratings 
-    (2010-2018)",
-    x = "Country",
-    y = "Average Total Cup Points",
-    fill = "Country"
-  ) 
-```
-
-
-### Distribution of Coffee Species
-
-```{r}
 ratings_df |> 
-  ggplot(aes(x = species)) +
-  geom_bar(fill = "orange") +
-  labs(
-    title = "Distribution of Coffee Species",
-    x = "Species",
-    y = "Count"
-  ) +
-  theme_minimal()
+  filter(!is.na(total_cup_points)) |> 
+  plot_ly(x = ~ species, y = ~ total_cup_points, type = "box", color = ~species) |> 
+   layout(title = "Boxplot of Total Cup Points by Species",
+         xaxis = list(title = "Species"),
+         yaxis = list(title = "Total Cup Points"))
 ```
 
 ### Proportion of Processing Methods
@@ -195,69 +154,48 @@ ratings_df |>
 ratings_df |> 
   count(processing_method) |> 
   mutate(prop = n / sum(n)) |> 
-  ggplot(aes(x = reorder(processing_method, prop), 
-             y = prop, fill = processing_method)) +
-  geom_col() +
-  coord_flip() +
-  labs(title = "Proportion of Processing Methods", 
-       x = "Processing Method", 
-       y = "Proportion") +
-  theme_minimal()
+  plot_ly(
+    x = ~ prop,
+    y = ~ reorder(processing_method, prop),
+    type = "bar",
+    marker = list(fill = ~ processing_method)
+  ) |> 
+  layout(
+    title = "Proportion of Processing Methods",
+    xaxis = list(title = "Proportion"),
+    yaxis = list(title = "Processing Method")
+  )
 ```
 
-### Total Cup Points by Processing Methods 改成plot_ly 和outlier
+
+### Total Cup Points by Processing Methods
 
 ```{r}
-ratings_df |> 
-  drop_na(total_cup_points, processing_method) |> 
-  ggplot(aes(x = processing_method, y = total_cup_points, fill = processing_method)) +
-  geom_boxplot() +
-  labs(title = "Total Cup Points by Processing Methods", 
-       x = "Processing Method", 
-       y = "Total Cup Points") +
-  theme_minimal() +
-  coord_flip()
+without_outliers = ratings_df |> 
+  drop_na(total_cup_points, processing_method)  |> 
+  group_by(processing_method)  |> 
+  mutate(
+    Q1 = quantile(total_cup_points, 0.25),
+    Q3 = quantile(total_cup_points, 0.75),
+    IQR = Q3 - Q1,
+    lower_bound = Q1 - 1.5 * IQR,
+    upper_bound = Q3 + 1.5 * IQR
+  )  |> 
+  filter(total_cup_points >= lower_bound & total_cup_points <= upper_bound)
+
+without_outliers |> 
+  plot_ly(
+    x = ~ total_cup_points,
+    y = ~ reorder(processing_method, total_cup_points, median),
+    type = "box",
+    color = ~ processing_method
+  )  |> 
+  layout(
+    title = "Total Cup Points by Processing Methods",
+    xaxis = list(title = "Total Cup Points"),
+    yaxis = list(title = "Processing Method")
+  )
 ```
-
-
-
-### Distribution of Total Cup Points by Species drop na
-
-```{r}
-ratings_df |> 
-  plot_ly(x = ~ species, y = ~ total_cup_points, type = "box", color = ~species) |> 
-   layout(title = "Boxplot of Total Cup Points by Species",
-         xaxis = list(title = "Species"),
-         yaxis = list(title = "Total Cup Points"))
-```
-
-
-```{r}
-yearly_data = ratings_df |> 
-  group_by(grading_year) |> 
-  summarise(avg_total_cup_points = mean(total_cup_points, na.rm = TRUE)) |> 
-  plot_ly(x = ~ grading_year, y = ~ avg_total_cup_points, type = "scatter", 
-          mode = "lines+markers") |> 
-  layout(title = "Trend of Average Total Cup Points Over Years",
-         xaxis = list(title = "Year"),
-         yaxis = list(title = "Average Total Cup Points"))
-```
-
-
-
-
-
-```{r}
-ratings_df |> 
-  filter(country_of_origin %in% c("Ethiopia", "Colombia", "Brazil")) |> 
-  ggplot(aes(x = country_of_origin, y = aroma, fill = country_of_origin)) +
-  geom_boxplot() +
-  labs(title = "Distribution of Aroma Ratings by Country",
-       x = "Country", y = "Aroma") +
-  theme_minimal()
-```
-
-
 
 
 ### The Distribution between Total Cup Points and Altitude by Variety （drop outliers）
@@ -305,3 +243,27 @@ plot_ly(
 ```
 
 
+### The Origins of Top Coffees Each Year from 2010 to 2018
+
+```{r}
+top_origins_yearly = 
+  ratings_df |> 
+  group_by(grading_year) |> 
+  arrange(grading_year, desc(total_cup_points)) |> 
+  slice(1)
+
+top_origins_yearly |> 
+  arrange(grading_year) |> 
+  select(grading_year, country_of_origin, total_cup_points, species, variety) |> 
+  knitr::kable(
+    col.names = c("Year", "Country of Origin", "Total Cup Points", 
+                  "Species", "Variety"),
+    caption = "Top Coffee by Country from 2010 to 2018",
+  )
+```
+
+The diversity of countries shows that competition in the coffee industry is global, with no single country dominating year after year.
+
+Brazil has been on the list twice (2011 and 2013), indicating that it has consistently produced highly rated coffee during this period.
+
+Ethiopia showed pretty good coffee strength with a top score of 90.58 in 2015, which is the highest coffee rating in those eight years.
