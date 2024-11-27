@@ -240,35 +240,25 @@ without_outliers |>
 
 The Natural/Dry processing method tends to yield the highest median and total cup points, suggesting its potential for producing higher-quality coffee. The Pulped Natural/Honey and Semi-washed/Semi-pulped methods have narrower distributions, indicating less variability in cup points. The Washed/Wet method is also consistent, with a median similar to Semi-washed but a slightly broader spread. Therefore, the differences in quality (as measured by total cup points) is associated with various processing methods, with Natural/Dry generally performing better scores.
 
-### The Distribution between Total Cup Points and Altitude by Variety （drop outliers）
+### The Distribution between Total Cup Points and Altitude by Variety 
+
 
 ```{r}
-ratings_filtered <- ratings_df %>%
-  filter(!is.na(total_cup_points) & !is.na(altitude_mean_meters))
+altitude_model = lm(altitude_mean_meters ~ total_cup_points, data = ratings_no_outliers)
 
-top_n_varieties = 8
-
-top_varieties <- ratings_filtered %>%
-  count(variety, sort = TRUE) %>%
-  top_n(top_n_varieties, n) %>%
-  pull(variety)
-
-ratings_filtered <- ratings_filtered %>%
-  mutate(
-    variety = ifelse(variety %in% top_varieties, as.character(variety), "Other"),
-    variety = as.factor(variety),  
-    text_label = str_c("Total Cup Points: ", total_cup_points, 
-                       "\nMean Altitude(meters): ", altitude_mean_meters,
-                       "\nVariety: ", variety)
-  )
-
+x_vals = seq(min(ratings_no_outliers$total_cup_points, na.rm = TRUE), 
+              max(ratings_no_outliers$total_cup_points, na.rm = TRUE), length.out = 100)
+y_preds = predict(altitude_model, newdata = data.frame(total_cup_points = x_vals))
 ```
 
 
-```{r}
-plot_ly(
-  data = ratings_filtered,
-  x = ~total_cup_points,
+```{r, warning=FALSE, message=FALSE}
+ratings_no_outliers |>
+  filter(!is.na(total_cup_points) & !is.na(altitude_mean_meters)) |>
+  mutate(text_label = str_c("Total Cup Points: ", total_cup_points, 
+                       "\nMean Altitude(meters): ", altitude_mean_meters,
+                       "\nVariety: ", variety)) |>
+  plot_ly(x = ~total_cup_points,
   y = ~altitude_mean_meters,
   type = "scatter",
   mode = "markers",
@@ -276,13 +266,25 @@ plot_ly(
   text = ~text_label,
   alpha = 0.5
 ) %>%
+  add_lines(
+    x = x_vals,
+    y = y_preds,
+    line = list(color = 'red'),
+    name = 'Trend Line',
+    showlegend = FALSE,
+    inherit = FALSE
+  ) %>%
   layout(
     title = "Total Cup Points vs. Mean Altitude (meters)",
     xaxis = list(title = "Total Cup Points",
-      range = c(60, max(ratings_filtered$total_cup_points, na.rm = TRUE))),
+      range = c(60, max(ratings_no_outliers$total_cup_points, na.rm = TRUE))),
     yaxis = list(title = "Altitude Mean Meters")
   )
+
 ```
+
+
+This plot shows the distribution between the mean altitude of the coffee beans and the total cup points. Although there is no obvious trend if we only look at the scatter on the plot, we can see that there is a positive correlation between altitude and cup points by looking at the increasing trend lines. As the altitude goes up, the total cup points of the coffee bean increases.
 
 
 ### The Origins of Top Coffees Each Year from 2010 to 2018
