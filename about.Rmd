@@ -11,6 +11,43 @@ output:
 
 ## Ratings Data
 
+The project utilizes the data from the [Coffee Quality Institute](https://database.coffeeinstitute.org/) (the original data can be found on [James LeDoux's github](https://github.com/jldbc/coffee-quality-database)) to rate coffee based on their acidity, sweetness, aroma, altitude, and region, offering a comprehensive look at coffee. 
+
+To make it easier to analyze the data, we named the coffee quality ratings dataset `ratings_df`. There are many variables in this dataset, and after careful consideration in relation to our project questions, we have selected the following variables for this project:
+
+* `total_cup_points`: Total rating/points (0 - 100 scale)
+
+* `species`: Species of coffee bean (arabica or robusta)
+
+* `country_of_origin`: Where the bean came from
+
+* `variety`: Variety of the beans
+
+* `grading_date`: When the beans were graded
+
+* `processing_method`: Method for processing
+
+* `aroma`: Aroma grade
+
+* `flavor`: Flavor grade
+
+* `aftertaste`: Aftertaste grade
+
+* `acidity`: Acidity grade
+
+* `body`: Body grade
+
+* `balance`: Balance grade
+
+* `Uniformity grade`: Uniformity grade
+
+* `clean_cup`: Clean cup grade
+
+* `sweetness`: Sweetness grade
+
+* `moisture`: Moisture Grade
+
+* `altitude_mean_meters`: Altitude mean meters
 
 
 
