@@ -133,7 +133,8 @@ At smaller values of log(lambda, 10), the estimated coefficients are smaller or 
 ```{r}
 lasso_fit = glmnet(x, y, lambda = lambda_opt)
 
-lasso_fit |> broom::tidy()
+lasso_fit |> broom::tidy() |> 
+  knitr::kable()
 ```
 
 The intercept value is 5.08, which represents the baseline predicted value of `total_cup_points` when all predictors are zero.

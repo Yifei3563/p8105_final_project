@@ -489,18 +489,77 @@ smaller or close to zero.As log(lambda, 10) increases, the coefficients
 stabilize and converge toward specific values.</p>
 <pre class="r"><code>lasso_fit = glmnet(x, y, lambda = lambda_opt)
 
-lasso_fit |&gt; broom::tidy()</code></pre>
-<pre><code>## # A tibble: 8 × 5
-##   term         step estimate lambda dev.ratio
-##   &lt;chr&gt;       &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;     &lt;dbl&gt;
-## 1 (Intercept)     1    5.08    0.01     0.923
-## 2 aroma           1    1.17    0.01     0.923
-## 3 flavor          1    1.97    0.01     0.923
-## 4 aftertaste      1    1.73    0.01     0.923
-## 5 acidity         1    0.895   0.01     0.923
-## 6 body            1    0.579   0.01     0.923
-## 7 balance         1    1.66    0.01     0.923
-## 8 sweetness       1    1.73    0.01     0.923</code></pre>
+lasso_fit |&gt; broom::tidy() |&gt; 
+  knitr::kable()</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">term</th>
+<th align="right">step</th>
+<th align="right">estimate</th>
+<th align="right">lambda</th>
+<th align="right">dev.ratio</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">(Intercept)</td>
+<td align="right">1</td>
+<td align="right">5.0786122</td>
+<td align="right">0.01</td>
+<td align="right">0.9234182</td>
+</tr>
+<tr class="even">
+<td align="left">aroma</td>
+<td align="right">1</td>
+<td align="right">1.1665876</td>
+<td align="right">0.01</td>
+<td align="right">0.9234182</td>
+</tr>
+<tr class="odd">
+<td align="left">flavor</td>
+<td align="right">1</td>
+<td align="right">1.9680460</td>
+<td align="right">0.01</td>
+<td align="right">0.9234182</td>
+</tr>
+<tr class="even">
+<td align="left">aftertaste</td>
+<td align="right">1</td>
+<td align="right">1.7276013</td>
+<td align="right">0.01</td>
+<td align="right">0.9234182</td>
+</tr>
+<tr class="odd">
+<td align="left">acidity</td>
+<td align="right">1</td>
+<td align="right">0.8954591</td>
+<td align="right">0.01</td>
+<td align="right">0.9234182</td>
+</tr>
+<tr class="even">
+<td align="left">body</td>
+<td align="right">1</td>
+<td align="right">0.5792510</td>
+<td align="right">0.01</td>
+<td align="right">0.9234182</td>
+</tr>
+<tr class="odd">
+<td align="left">balance</td>
+<td align="right">1</td>
+<td align="right">1.6573191</td>
+<td align="right">0.01</td>
+<td align="right">0.9234182</td>
+</tr>
+<tr class="even">
+<td align="left">sweetness</td>
+<td align="right">1</td>
+<td align="right">1.7282844</td>
+<td align="right">0.01</td>
+<td align="right">0.9234182</td>
+</tr>
+</tbody>
+</table>
 <p>The intercept value is 5.08, which represents the baseline predicted
 value of <code>total_cup_points</code> when all predictors are zero.</p>
 <p>All predictors (<code>aroma</code>, <code>flavor</code>,
