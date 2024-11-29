@@ -39,13 +39,7 @@ To make it easier to analyze the data, we named the coffee quality ratings datas
 
 * `balance`: Balance grade
 
-* `Uniformity grade`: Uniformity grade
-
-* `clean_cup`: Clean cup grade
-
 * `sweetness`: Sweetness grade
-
-* `moisture`: Moisture Grade
 
 * `altitude_mean_meters`: Altitude mean meters
 
