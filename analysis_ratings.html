@@ -463,6 +463,9 @@ lasso_cv =
   cv.glmnet(x, y, lambda = lambda)
 
 lambda_opt = lasso_cv[[&quot;lambda.min&quot;]]</code></pre>
+<p>Generating a sequence of lambda values to create a range of lambda
+values on a logarithmic scale to ensure our proper exploration of the
+regularization strength.</p>
 <pre class="r"><code>lasso_fit |&gt; 
   broom::tidy() |&gt; 
   select(term, lambda, estimate) |&gt; 
@@ -473,11 +476,17 @@ lambda_opt = lasso_cv[[&quot;lambda.min&quot;]]</code></pre>
   geom_vline(xintercept = lambda_opt, color = &quot;blue&quot;, linewidth = 1.2) +
   theme(legend.position = &quot;none&quot;)</code></pre>
 <p><img src="analysis_ratings_files/figure-html/unnamed-chunk-6-1.png" width="90%" /></p>
+<p>As lambda increases, the coefficients shrink toward zero.</p>
 <pre class="r"><code>lasso_cv |&gt; 
   broom::tidy() |&gt; 
   ggplot(aes(x = log(lambda, 10), y = estimate)) + 
   geom_point()</code></pre>
 <p><img src="analysis_ratings_files/figure-html/unnamed-chunk-7-1.png" width="90%" /></p>
+<p>This plot visualizes the effect of different lambda values on the
+estimated coefficients.</p>
+<p>At smaller values of log(lambda, 10), the estimated coefficients are
+smaller or close to zero.As log(lambda, 10) increases, the coefficients
+stabilize and converge toward specific values.</p>
 <pre class="r"><code>lasso_fit = glmnet(x, y, lambda = lambda_opt)
 
 lasso_fit |&gt; broom::tidy()</code></pre>
@@ -492,6 +501,22 @@ lasso_fit |&gt; broom::tidy()</code></pre>
 ## 6 body            1    0.579   0.01     0.923
 ## 7 balance         1    1.66    0.01     0.923
 ## 8 sweetness       1    1.73    0.01     0.923</code></pre>
+<p>The intercept value is 5.08, which represents the baseline predicted
+value of <code>total_cup_points</code> when all predictors are zero.</p>
+<p>All predictors (<code>aroma</code>, <code>flavor</code>,
+<code>aftertaste</code>, <code>acidity</code>, <code>body</code>,
+<code>balance</code>, <code>sweetness</code>) have non-zero
+coefficients, indicating they contribute to the model at the optimal
+lambda.</p>
+<p><code>flavor</code> has the largest coefficient with the value of
+1.97, suggesting that flavor is the most influential predictor in
+determining the total cup points.</p>
+<p><code>body</code>(0.579) and <code>acidity</code>(0.895) have
+relatively the smallest coefficients, indicating that they have a weaker
+influence on the total cup points compared to others variables.</p>
+<p>The deviance ratio is 0.923, suggesting that the model explains a
+significant portion of the variability in
+<code>total_cup_points.</code></p>
 </div>
 
 
