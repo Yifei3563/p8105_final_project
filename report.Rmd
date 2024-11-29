@@ -61,7 +61,7 @@ Some possible questions include:
 
 ## Data Cleaning
 
-##### Ratings Data
+### Ratings Data
 
 For the ratings data, we first filtered out the variables needed for our project analysis then removed the unnecessary ones. We created a new column named `grading_year` by extracting the year as a four-digit number from the grading_date column using the `str_extract` function. This isolates the year, because we want to analyze the coffee ratings based on the year instead of focusing on a specific month and date. Additionally, the `species`, `variety`, and `processing_method` columns are converted into factors using the `as.factor` function. This step ensures that these variables are treated as categorical variables, making them suitable for our later statistical analysis. 
 
@@ -69,7 +69,160 @@ For the ratings data, we first filtered out the variables needed for our project
 
 ## Exploratory Analysis
 
+### Ratings Data
 
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(modelr)
+library(haven)
+library(dplyr)
+library(plotly)
+library(readr)
+library(forcats)
+library(corrplot)
+library(glmnet)
+
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%",
+  warning = FALSE,
+  message = FALSE
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+```
+
+
+```{r}
+ratings_df = read_csv("data/coffee_ratings.csv") %>% 
+  janitor::clean_names() %>%
+  select(total_cup_points, species, country_of_origin, 
+         region, number_of_bags, bag_weight, grading_date, variety,
+         processing_method, aroma, flavor, aftertaste, acidity, body, balance,
+         sweetness,altitude_mean_meters) %>%
+  mutate(grading_year = str_extract(grading_date, "\\d{4}"),
+         species = as.factor(species),
+         variety = as.factor(variety),
+         processing_method = as.factor(processing_method))
+```
+
+
+#### Trend of Average Total Cup Points Over Years
+
+```{r}
+ratings_df |> 
+  group_by(grading_year) |> 
+  summarise(avg_total_cup_points = mean(total_cup_points, na.rm = TRUE)) |> 
+  plot_ly(x = ~ grading_year, y = ~ avg_total_cup_points, type = "scatter", 
+          mode = "lines + markers") |> 
+  layout(title = "Trend of Average Total Cup Points Over Years",
+         xaxis = list(title = "Year"),
+         yaxis = list(title = "Average Total Cup Points"))
+```
+
+We examine trends over the 8-year time period to get insights into how coffee quality has fluctuated. The plot shows a non-linear trend of average cup points across eight years. The years 2010 and 2018 exhibited the highest average scores, while 2012 and 2017 saw significant dips. The variability in cup points across years indicates that coffee quality is not static and can fluctuate significantly, warranting a deeper investigation into contributing factors.
+
+#### Distribution of Total Cup Points by Species
+
+```{r}
+Q1 <- quantile(ratings_df$total_cup_points, 0.25)
+Q3 <- quantile(ratings_df$total_cup_points, 0.75)
+IQR <- Q3 - Q1
+ratings_df <- ratings_df %>%
+  filter(total_cup_points > (Q1 - 1.5 * IQR) & total_cup_points < (Q3 + 1.5 * IQR))
+
+ratings_df |> 
+  filter(!is.na(total_cup_points)) |> 
+  plot_ly(x = ~ species, y = ~ total_cup_points, type = "box", color = ~species) |> 
+   layout(title = "Boxplot of Total Cup Points by Species",
+         xaxis = list(title = "Species"),
+         yaxis = list(title = "Total Cup Points"))
+```
+
+We removed outliers by using the interquartile range (IQR) method to identify and filter extreme values. After removing outliers, the boxplot shows a more compact and representative distribution for both Arabica and Robusta species. The general trends remain the same, with Arabica having a slightly higher median and a wider data range than Robusta.
+
+#### Proportion of Processing Methods
+
+```{r}
+ratings_df |> 
+  count(processing_method) |> 
+  mutate(prop = n / sum(n)) |> 
+  plot_ly(
+    x = ~ prop,
+    y = ~ reorder(processing_method, prop),
+    type = "bar",
+    marker = list(fill = ~ processing_method)
+  ) |> 
+  layout(
+    title = "Proportion of Processing Methods",
+    xaxis = list(title = "Proportion"),
+    yaxis = list(title = "Processing Method")
+  )
+```
+
+Washed/Wet processing dominates (around 60%), followed by Natural/Dry methods. Other processing methods such as Semi-washed, Pulped Natural/Honey are less common. This highlights the dominance of Washed/Wet processing methods. However, alternative methods like Natural/Dry still hold a significant share, prompting further investigation into how processing affects scores.
+
+#### Total Cup Points by Processing Methods
+
+```{r}
+without_outliers = ratings_df |> 
+  drop_na(total_cup_points, processing_method)  |> 
+  group_by(processing_method)  |> 
+  mutate(
+    Q1 = quantile(total_cup_points, 0.25),
+    Q3 = quantile(total_cup_points, 0.75),
+    IQR = Q3 - Q1,
+    lower_bound = Q1 - 1.5 * IQR,
+    upper_bound = Q3 + 1.5 * IQR
+  )  |> 
+  filter(total_cup_points >= lower_bound & total_cup_points <= upper_bound)
+
+without_outliers |> 
+  plot_ly(
+    x = ~ total_cup_points,
+    y = ~ reorder(processing_method, total_cup_points, median),
+    type = "box",
+    color = ~ processing_method
+  )  |> 
+  layout(
+    title = "Total Cup Points by Processing Methods",
+    xaxis = list(title = "Total Cup Points"),
+    yaxis = list(title = "Processing Method")
+  )
+```
+
+This comparison evaluates how different processing methods impact total cup points. The Natural/Dry processing method tends to yield the highest median and total cup points, suggesting its potential for producing higher-quality coffee. The Pulped Natural/Honey and Semi-washed/Semi-pulped methods have narrower distributions, indicating less variability in cup points. The Washed/Wet method is also consistent, with a median similar to Semi-washed but a slightly broader spread. 
+
+#### Origins of Top Coffees Each Year
+
+```{r}
+top_origins_yearly = 
+  ratings_df |> 
+  group_by(grading_year) |> 
+  arrange(grading_year, desc(total_cup_points)) |> 
+  slice(1)
+
+top_origins_yearly |> 
+  arrange(grading_year) |> 
+  select(grading_year, country_of_origin, total_cup_points, species, variety) |> 
+  knitr::kable(
+    col.names = c("Year", "Country of Origin", "Total Cup Points", 
+                  "Species", "Variety"),
+    caption = "Top Coffee by Country from 2010 to 2018",
+  )
+```
+
+We are curious about the top coffee origins and want to see if there exists regional strengths or cultivation efforts. Therefore we make a table showing that top-performing coffees come from a diverse set of countries, with no single country dominating year after year. Ethiopia appears twice, with exceptionally high scores in 2015.
 
 
 ## Discussion
