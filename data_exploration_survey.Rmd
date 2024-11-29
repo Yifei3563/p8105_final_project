@@ -293,3 +293,164 @@ survey_tidy %>%
                        title = list(text = "<b>Preferred Caffeine</b>")))
 ```
 
+### Most willing to pay vs. Most paid
+
+```{r paid_willing_matrix}
+survey_tidy %>% 
+  drop_na(most_paid, most_willing) %>% 
+  distinct(submission_id, most_paid, most_willing) %>% 
+  group_by(most_paid, most_willing) %>% 
+  summarize(count = n()) %>% 
+  ungroup() %>% 
+  plot_ly(x = ~most_paid, y = ~most_willing, z = ~count, 
+          type = "heatmap", colors = "viridis") %>% 
+  add_annotations(
+    text = ~count, 
+    font = list(size = 14, color = "white"), 
+    showarrow = FALSE) %>% 
+  layout(
+    title = "Most willing to pay vs Most paid (per cup)",
+    xaxis = list(title = "Most Paid (per cup)"),
+    yaxis = list(title = "Most Willing to Pay (per cup)"))
+```
+
+## Total money spend on coffee per month vs. Education level
+
+```{r total_spend_edu}
+survey_tidy %>% 
+  drop_na(total_spend, education_level) %>% 
+  distinct(submission_id, total_spend, education_level) %>% 
+  group_by(total_spend, education_level) %>% 
+  summarize(count = n()) %>% 
+  ungroup() %>% 
+  plot_ly(x = ~total_spend, y = ~count,
+          color = ~education_level, name = ~education_level, 
+          type = "scatter", mode = "lines", colors = "viridis") %>% 
+  layout(title = "Total Spend on Coffee vs. Education Level",
+         xaxis = list(title = "Total Spend on Coffee (per month)"),
+         yaxis = list(title = "Count"),
+         legend = list(orientation = "h", 
+                       y = -0.3,
+                       title = list(text = "<b>Education Level</b>")))
+```
+
+
+
+## Coffee Ratings
+
+### Overall preference
+
+```{r overall_prefer}
+colors = c('rgb(221, 170, 204)', 
+           'rgb(187, 102, 136)', 
+           'rgb(136, 136, 204)', 
+           'rgb(204, 170, 136)')
+
+survey_tidy %>% 
+  distinct(submission_id, prefer_overall) %>% 
+  group_by(prefer_overall) %>% 
+  count() %>% 
+  plot_ly(
+    labels = ~prefer_overall, values = ~n, type = "pie", 
+    textposition = "inside",
+    textinfo = "label+percent",
+    insidetextfont = list(color = '#FFFFFF'),
+    marker = list(colors = colors,
+                  line = list(color = '#FFFFFF', width = 1))
+    ) %>% 
+  layout(
+    title = "Overall preference of coffee"
+  )
+```
+
+### Overall preference across self-rated expertise
+
+```{r expertise_prefer}
+survey_tidy %>% 
+  distinct(submission_id, prefer_overall, expertise) %>% 
+  group_by(expertise, prefer_overall) %>% 
+  summarize(total_exp = n()) %>%
+  mutate(prop = total_exp / sum(total_exp)) %>% 
+  plot_ly(x = ~expertise, y = ~(prop * 100),
+          color = ~prefer_overall, name = ~prefer_overall, 
+          type = "bar", colors = "viridis") %>% 
+  layout(title = "Overall preference across self-rated expertise",
+         xaxis = list(title = "Self-rated Coffee Expertise"),
+         yaxis = list(title = "Percentage (%)"),
+         legend = list(orientation = "h", 
+                       y = -0.3,
+                       title = list(text = "<b>Overall Preference</b>"),
+                       traceorder = "normal"),
+         barmode = "stack")
+```
+
+### How do you rate each coffee
+
+```{r prefer_each}
+survey_tidy %>% 
+  select(submission_id, coffee_name, preference) %>% 
+  group_by(coffee_name, preference) %>% 
+  drop_na(preference) %>% 
+  count() %>% 
+  ggplot(aes(x = preference, y = n, fill = coffee_name)) +
+  geom_col(width = 1, alpha = 0.8, color = "white") +
+  geom_line(aes(group = 1), color = "black", size = 1, alpha = 0.8) +
+  facet_grid(. ~ coffee_name) +
+  labs(
+    title = "How do you rate each coffee",
+    x = "Preference Ratings",
+    y = "Count",
+    fill = "Coffee Name")
+```
+
+
+### How do you rate the flavor
+
+```{r coffee_taste}
+plot_acidity = 
+  survey_tidy %>% 
+  select(coffee_name, acidity) %>% 
+  group_by(coffee_name) %>% 
+  plot_ly(y = ~acidity, 
+          color = ~coffee_name, 
+          type = "box", 
+          colors = "viridis",
+          showlegend = FALSE)
+
+plot_bitterness = 
+  survey_tidy %>% 
+  select(coffee_name, bitterness) %>% 
+  group_by(coffee_name) %>% 
+  plot_ly(y = ~bitterness, 
+          color = ~coffee_name, 
+          type = "box", 
+          colors = "viridis",
+          showlegend = FALSE)
+
+subplot(plot_acidity, plot_bitterness, nrows = 2, margin = 0.07) %>% 
+  layout(annotations = list(
+    list(
+      x = 0.5,  
+      y = 1.0,  
+      text = "Distribution of Acidity Ratings",  
+      xref = "paper",  
+      yref = "paper",  
+      xanchor = "center",  
+      yanchor = "bottom",  
+      showarrow = FALSE
+    ),
+    list(
+      x = 0.5,  
+      y = 0.45,  
+      text = "Distribution of Bitterness Ratings",  
+      xref = "paper",  
+      yref = "paper",  
+      xanchor = "center",  
+      yanchor = "bottom",  
+      showarrow = FALSE
+    )
+  ))
+```
+
+
+
