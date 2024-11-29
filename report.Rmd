@@ -59,11 +59,17 @@ Some possible questions include:
 
 - The relationship between altitude and coffee characteristics.
 
-## Exploratory Analysis
+## Data Cleaning
 
 ##### Ratings Data
 
 For the ratings data, we first filtered out the variables needed for our project analysis then removed the unnecessary ones. We created a new column named `grading_year` by extracting the year as a four-digit number from the grading_date column using the `str_extract` function. This isolates the year, because we want to analyze the coffee ratings based on the year instead of focusing on a specific month and date. Additionally, the `species`, `variety`, and `processing_method` columns are converted into factors using the `as.factor` function. This step ensures that these variables are treated as categorical variables, making them suitable for our later statistical analysis. 
+
+
+
+## Exploratory Analysis
+
+
 
 
 ## Discussion
