@@ -36,6 +36,14 @@
 <script src="site_libs/navigation-1.1/codefolding.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/htmltools-fill-0.5.8.1/fill.css" rel="stylesheet" />
+<script src="site_libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
+<script src="site_libs/plotly-binding-4.10.4/plotly.js"></script>
+<script src="site_libs/typedarray-0.1/typedarray.min.js"></script>
+<link href="site_libs/crosstalk-1.2.1/css/crosstalk.min.css" rel="stylesheet" />
+<script src="site_libs/crosstalk-1.2.1/js/crosstalk.min.js"></script>
+<link href="site_libs/plotly-htmlwidgets-css-2.11.1/plotly-htmlwidgets.css" rel="stylesheet" />
+<script src="site_libs/plotly-main-2.11.1/plotly-latest.min.js"></script>
 <link href="site_libs/font-awesome-6.4.2/css/all.min.css" rel="stylesheet" />
 <link href="site_libs/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet" />
 
@@ -419,6 +427,8 @@ div.tocify {
 </div>
 
 
+<div id="data-importing-and-organizing" class="section level1">
+<h1>Data Importing and Organizing</h1>
 <pre class="r"><code>survey = read_csv(&quot;data/coffee_survey.csv&quot;) |&gt;
   janitor::clean_names() |&gt;
   select(-purchase_other, -favorite_specify, -additions_other, -prefer_abc, -prefer_ad, 
@@ -451,8 +461,224 @@ div.tocify {
                              &quot;coffee_d&quot; ~ &quot;Coffee D&quot;),
     coffee_name = as.factor(coffee_name)
   ) %&gt;% 
+  mutate(
+    age = factor(age, levels = rev(c(&quot;&lt;18 years old&quot;, &quot;18-24 years old&quot;, &quot;25-34 years old&quot;, 
+                                &quot;35-44 years old&quot;, &quot;45-54 years old&quot;, &quot;55-64 years old&quot;, 
+                                &quot;&gt;65 years old&quot;))),
+    cups = factor(cups, levels = rev(c(&quot;More than 4&quot;, &quot;4&quot;, &quot;3&quot;, &quot;2&quot;, &quot;1&quot;, &quot;Less than 1&quot;))),
+    education_level = factor(education_level, 
+                             levels = c(&quot;Doctorate or professional degree&quot;, &quot;Master&#39;s degree&quot;,
+                                        &quot;Bachelor&#39;s degree&quot;, &quot;Some college or associate&#39;s degree&quot;,
+                                        &quot;High school graduate&quot;, &quot;Less than high school&quot;)),
+    favorite = fct_recode(favorite, &quot;Blended drink&quot; = &quot;Blended drink (e.g. Frappuccino)&quot;),
+    most_paid = factor(most_paid, levels = c(&quot;Less than $2&quot;, &quot;$2-$4&quot;, &quot;$4-$6&quot;, &quot;$6-$8&quot;, 
+                                             &quot;$8-$10&quot;, &quot;$10-$15&quot;, &quot;$15-$20&quot;, &quot;More than $20&quot;)),
+    most_willing = factor(most_willing, levels = c(&quot;Less than $2&quot;, &quot;$2-$4&quot;, &quot;$4-$6&quot;, &quot;$6-$8&quot;, 
+                                             &quot;$8-$10&quot;, &quot;$10-$15&quot;, &quot;$15-$20&quot;, &quot;More than $20&quot;)),
+    total_spend = factor(total_spend, levels = c(&quot;&lt;$20&quot;, &quot;$20-$40&quot;, &quot;$40-$60&quot;, &quot;$60-$80&quot;, &quot;$80-$100&quot;,
+                                                 &quot;&gt;$100&quot;)),
+    caffeine = factor(caffeine, levels = c(&quot;Decaf&quot;, &quot;Half caff&quot;, &quot;Full caffeine&quot;))
+  ) %&gt;% 
   relocate(prefer_overall, .after = everything())</code></pre>
-<p>```</p>
+</div>
+<div id="exploratory-data-analysis" class="section level1">
+<h1>Exploratory Data Analysis</h1>
+<div id="characteristics-and-lifestyle" class="section level2">
+<h2>Characteristics and Lifestyle</h2>
+<div id="why-do-you-drink-coffee" class="section level3">
+<h3>Why do you drink coffee</h3>
+<pre class="r"><code>why_drink_df = 
+  survey_tidy %&gt;% 
+  distinct(submission_id, why_drink) %&gt;% 
+  drop_na(why_drink) %&gt;% 
+  mutate(why_drink = str_split(why_drink, &quot;, &quot;)) %&gt;% 
+  unnest(why_drink) %&gt;% 
+  group_by(why_drink) %&gt;% 
+  count() %&gt;% 
+  ungroup() %&gt;% 
+  mutate(why_drink = case_match(why_drink, 
+                                &quot;I need the caffeine&quot; ~ &quot;Caffeine&quot;,
+                                &quot;I need the ritual&quot; ~ &quot;Ritual&quot;,
+                                &quot;It makes me go to the bathroom&quot; ~ &quot;To poop&quot;,
+                                &quot;It tastes good&quot; ~ &quot;Tastes good&quot;,
+                                &quot;Other&quot; ~ &quot;Other&quot;))
+
+why_drink_df %&gt;% 
+  mutate(why_drink = fct_reorder(why_drink, n),
+         why_drink = fct_rev(why_drink)) %&gt;% 
+  plot_ly(x = ~why_drink, y = ~n,
+          color = ~why_drink, name = ~why_drink, type = &quot;bar&quot;, colors = &quot;viridis&quot;) %&gt;% 
+  layout(title = &quot;Why do you drink coffee?&quot;,
+         xaxis = list(title = &quot;Reasons&quot;),
+         yaxis = list(title = &quot;Count&quot;),
+         showlegend = FALSE)</code></pre>
+<div class="plotly html-widget html-fill-item" id="htmlwidget-27038b58d85093b41460" style="width:90%;height:460.8px;"></div>
+<script type="application/json" data-for="htmlwidget-27038b58d85093b41460">{"x":{"visdat":{"3a649a27181":["function () ","plotlyVisDat"]},"cur_data":"3a649a27181","attrs":{"3a649a27181":{"x":{},"y":{},"name":{},"color":{},"colors":"viridis","alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"type":"bar"}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"title":"Why do you drink coffee?","xaxis":{"domain":[0,1],"automargin":true,"title":"Reasons","type":"category","categoryorder":"array","categoryarray":["Tastes good","Caffeine","Ritual","To poop","Other"]},"yaxis":{"domain":[0,1],"automargin":true,"title":"Count"},"showlegend":false,"hovermode":"closest"},"source":"A","config":{"modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"data":[{"x":["Tastes good"],"y":[3305],"name":"Tastes good","type":"bar","marker":{"color":"rgba(68,1,84,1)","line":{"color":"rgba(68,1,84,1)"}},"textfont":{"color":"rgba(68,1,84,1)"},"error_y":{"color":"rgba(68,1,84,1)"},"error_x":{"color":"rgba(68,1,84,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["Caffeine"],"y":[1992],"name":"Caffeine","type":"bar","marker":{"color":"rgba(59,82,139,1)","line":{"color":"rgba(59,82,139,1)"}},"textfont":{"color":"rgba(59,82,139,1)"},"error_y":{"color":"rgba(59,82,139,1)"},"error_x":{"color":"rgba(59,82,139,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["Ritual"],"y":[1899],"name":"Ritual","type":"bar","marker":{"color":"rgba(33,144,141,1)","line":{"color":"rgba(33,144,141,1)"}},"textfont":{"color":"rgba(33,144,141,1)"},"error_y":{"color":"rgba(33,144,141,1)"},"error_x":{"color":"rgba(33,144,141,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["To poop"],"y":[462],"name":"To poop","type":"bar","marker":{"color":"rgba(93,200,99,1)","line":{"color":"rgba(93,200,99,1)"}},"textfont":{"color":"rgba(93,200,99,1)"},"error_y":{"color":"rgba(93,200,99,1)"},"error_x":{"color":"rgba(93,200,99,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["Other"],"y":[164],"name":"Other","type":"bar","marker":{"color":"rgba(253,231,37,1)","line":{"color":"rgba(253,231,37,1)"}},"textfont":{"color":"rgba(253,231,37,1)"},"error_y":{"color":"rgba(253,231,37,1)"},"error_x":{"color":"rgba(253,231,37,1)"},"xaxis":"x","yaxis":"y","frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+</div>
+<div id="how-do-you-brew-coffee-at-home" class="section level3">
+<h3>How do you brew coffee at home</h3>
+<pre class="r"><code>brew_df = 
+  survey_tidy %&gt;% 
+  distinct(submission_id, brew) %&gt;% 
+  drop_na(brew) %&gt;% 
+  mutate(brew = str_split(brew, &quot;, &quot;)) %&gt;% 
+  unnest(brew) %&gt;% 
+  group_by(brew) %&gt;% 
+  count() %&gt;% 
+  ungroup() %&gt;%
+  mutate(brew = str_replace(brew, &quot;\\(.*&quot;, &quot;&quot;))
+
+brew_df %&gt;% 
+  mutate(brew = fct_reorder(brew, n),
+         brew = fct_rev(brew)) %&gt;% 
+  plot_ly(x = ~brew, y = ~n,
+          color = ~brew, name = ~brew, type = &quot;bar&quot;, colors = &quot;viridis&quot;) %&gt;% 
+  layout(title = &quot;How do you brew coffee at home?&quot;,
+         xaxis = list(title = &quot;Methods&quot;),
+         yaxis = list(title = &quot;Count&quot;),
+         showlegend = FALSE)</code></pre>
+<div class="plotly html-widget html-fill-item" id="htmlwidget-3600b6d55455a4aa6ec8" style="width:90%;height:460.8px;"></div>
+<script type="application/json" data-for="htmlwidget-3600b6d55455a4aa6ec8">{"x":{"visdat":{"3a64121c5ae8":["function () ","plotlyVisDat"]},"cur_data":"3a64121c5ae8","attrs":{"3a64121c5ae8":{"x":{},"y":{},"name":{},"color":{},"colors":"viridis","alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"type":"bar"}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"title":"How do you brew coffee at home?","xaxis":{"domain":[0,1],"automargin":true,"title":"Methods","type":"category","categoryorder":"array","categoryarray":["Pour over","Espresso","French press","Other","Coffee brewing machine ","Cold brew","Pod/capsule machine ","Coffee extract ","Instant coffee","Bean-to-cup machine"]},"yaxis":{"domain":[0,1],"automargin":true,"title":"Count"},"showlegend":false,"hovermode":"closest"},"source":"A","config":{"modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"data":[{"x":["Pour over"],"y":[2071],"name":"Pour over","type":"bar","marker":{"color":"rgba(68,1,84,1)","line":{"color":"rgba(68,1,84,1)"}},"textfont":{"color":"rgba(68,1,84,1)"},"error_y":{"color":"rgba(68,1,84,1)"},"error_x":{"color":"rgba(68,1,84,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["Espresso"],"y":[1364],"name":"Espresso","type":"bar","marker":{"color":"rgba(72,40,120,1)","line":{"color":"rgba(72,40,120,1)"}},"textfont":{"color":"rgba(72,40,120,1)"},"error_y":{"color":"rgba(72,40,120,1)"},"error_x":{"color":"rgba(72,40,120,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["French press"],"y":[662],"name":"French press","type":"bar","marker":{"color":"rgba(62,74,137,1)","line":{"color":"rgba(62,74,137,1)"}},"textfont":{"color":"rgba(62,74,137,1)"},"error_y":{"color":"rgba(62,74,137,1)"},"error_x":{"color":"rgba(62,74,137,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["Other"],"y":[610],"name":"Other","type":"bar","marker":{"color":"rgba(49,104,142,1)","line":{"color":"rgba(49,104,142,1)"}},"textfont":{"color":"rgba(49,104,142,1)"},"error_y":{"color":"rgba(49,104,142,1)"},"error_x":{"color":"rgba(49,104,142,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["Coffee brewing machine "],"y":[596],"name":"Coffee brewing machine ","type":"bar","marker":{"color":"rgba(38,130,142,1)","line":{"color":"rgba(38,130,142,1)"}},"textfont":{"color":"rgba(38,130,142,1)"},"error_y":{"color":"rgba(38,130,142,1)"},"error_x":{"color":"rgba(38,130,142,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["Cold brew"],"y":[465],"name":"Cold brew","type":"bar","marker":{"color":"rgba(31,158,137,1)","line":{"color":"rgba(31,158,137,1)"}},"textfont":{"color":"rgba(31,158,137,1)"},"error_y":{"color":"rgba(31,158,137,1)"},"error_x":{"color":"rgba(31,158,137,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["Pod/capsule machine "],"y":[287],"name":"Pod/capsule machine ","type":"bar","marker":{"color":"rgba(53,183,121,1)","line":{"color":"rgba(53,183,121,1)"}},"textfont":{"color":"rgba(53,183,121,1)"},"error_y":{"color":"rgba(53,183,121,1)"},"error_x":{"color":"rgba(53,183,121,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["Coffee extract "],"y":[160],"name":"Coffee extract ","type":"bar","marker":{"color":"rgba(109,205,89,1)","line":{"color":"rgba(109,205,89,1)"}},"textfont":{"color":"rgba(109,205,89,1)"},"error_y":{"color":"rgba(109,205,89,1)"},"error_x":{"color":"rgba(109,205,89,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["Instant coffee"],"y":[113],"name":"Instant coffee","type":"bar","marker":{"color":"rgba(180,222,44,1)","line":{"color":"rgba(180,222,44,1)"}},"textfont":{"color":"rgba(180,222,44,1)"},"error_y":{"color":"rgba(180,222,44,1)"},"error_x":{"color":"rgba(180,222,44,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["Bean-to-cup machine"],"y":[74],"name":"Bean-to-cup machine","type":"bar","marker":{"color":"rgba(253,231,37,1)","line":{"color":"rgba(253,231,37,1)"}},"textfont":{"color":"rgba(253,231,37,1)"},"error_y":{"color":"rgba(253,231,37,1)"},"error_x":{"color":"rgba(253,231,37,1)"},"xaxis":"x","yaxis":"y","frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+</div>
+<div id="where-do-you-drink-coffee" class="section level3">
+<h3>Where do you drink coffee</h3>
+<pre class="r"><code># Step 1: Prepare survey_long
+
+survey_long =
+  survey_tidy %&gt;% 
+  select(submission_id, where_drink) %&gt;% 
+  distinct(submission_id, .keep_all = TRUE) %&gt;% 
+  separate_rows(where_drink, sep = &quot;, &quot;) %&gt;% 
+  mutate(where_drink = str_trim(where_drink))
+
+
+# Step 2: Create the co-occurrence matrix
+
+co_occurrence =
+  survey_long %&gt;%
+  mutate(value = 1) %&gt;%
+  pivot_wider(names_from = where_drink, values_from = value, values_fill = 0) %&gt;%
+  select(-submission_id) %&gt;%
+  as.matrix() %&gt;%
+  as(&quot;sparseMatrix&quot;)  # Convert to sparse matrix for efficient operations
+
+co_matrix = t(co_occurrence) %*% co_occurrence  # Calculate the co-occurrence matrix
+
+
+# Step 3: Calculate percentages (row normalization)
+
+total_submission = 
+  survey_tidy %&gt;% 
+  select(submission_id, where_drink) %&gt;% 
+  distinct(submission_id, .keep_all = TRUE) %&gt;% 
+  count() %&gt;% 
+  pull()
+
+co_matrix_percent = (co_matrix / total_submission) * 100 
+
+# Step 4: Subset for visualization
+
+top_categories = 
+  co_matrix %&gt;% 
+  rowSums() %&gt;% 
+  order(decreasing = TRUE)
+
+co_matrix_dense_subset = 
+  co_matrix_percent[top_categories, top_categories] %&gt;% 
+  as.matrix()
+
+# Step 5: Create heatmap
+
+co_occurrence_df = 
+  co_matrix_dense_subset %&gt;% 
+  reshape2::melt() %&gt;% 
+  rename(
+    Category1 = Var1,
+    Category2 = Var2,
+    Percentage = value
+  )
+
+co_occurrence_df %&gt;% 
+  plot_ly(x = ~Category1, y = ~Category2, z = ~Percentage, 
+          type = &quot;heatmap&quot;, colors = &quot;Spectral&quot;) %&gt;% 
+  add_annotations(
+    text = ~round(Percentage, 2), 
+    font = list(size = 14, color = &quot;white&quot;), 
+    showarrow = FALSE) %&gt;% 
+  layout(
+    title = &quot;Co-occurrence Heatmap: Where to drink coffee?&quot;,
+    xaxis = list(title = &quot;&quot;),
+    yaxis = list(title = &quot;&quot;))</code></pre>
+<div class="plotly html-widget html-fill-item" id="htmlwidget-63f2af240f125e1308f1" style="width:90%;height:460.8px;"></div>
+<script type="application/json" data-for="htmlwidget-63f2af240f125e1308f1">{"x":{"visdat":{"3a6420a36d8":["function () ","plotlyVisDat"]},"cur_data":"3a6420a36d8","attrs":{"3a6420a36d8":{"x":{},"y":{},"z":{},"colors":"Spectral","alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"type":"heatmap"}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"annotations":[{"text":92.140000000000001,"font":{"size":14,"color":"white"},"showarrow":false,"x":"At home","y":"At home"},{"text":31.73,"font":{"size":14,"color":"white"},"showarrow":false,"x":"At the office","y":"At home"},{"text":27.16,"font":{"size":14,"color":"white"},"showarrow":false,"x":"At a cafe","y":"At home"},{"text":16.210000000000001,"font":{"size":14,"color":"white"},"showarrow":false,"x":"On the go","y":"At home"},{"text":0.029999999999999999,"font":{"size":14,"color":"white"},"showarrow":false,"x":"None of these","y":"At home"},{"text":31.73,"font":{"size":14,"color":"white"},"showarrow":false,"x":"At home","y":"At the office"},{"text":36.219999999999999,"font":{"size":14,"color":"white"},"showarrow":false,"x":"At the office","y":"At the office"},{"text":11.92,"font":{"size":14,"color":"white"},"showarrow":false,"x":"At a cafe","y":"At the office"},{"text":9.9900000000000002,"font":{"size":14,"color":"white"},"showarrow":false,"x":"On the go","y":"At the office"},{"text":0,"font":{"size":14,"color":"white"},"showarrow":false,"x":"None of these","y":"At the office"},{"text":27.16,"font":{"size":14,"color":"white"},"showarrow":false,"x":"At home","y":"At a cafe"},{"text":11.92,"font":{"size":14,"color":"white"},"showarrow":false,"x":"At the office","y":"At a cafe"},{"text":29.489999999999998,"font":{"size":14,"color":"white"},"showarrow":false,"x":"At a cafe","y":"At a cafe"},{"text":8.5999999999999996,"font":{"size":14,"color":"white"},"showarrow":false,"x":"On the go","y":"At a cafe"},{"text":0.029999999999999999,"font":{"size":14,"color":"white"},"showarrow":false,"x":"None of these","y":"At a cafe"},{"text":16.210000000000001,"font":{"size":14,"color":"white"},"showarrow":false,"x":"At home","y":"On the go"},{"text":9.9900000000000002,"font":{"size":14,"color":"white"},"showarrow":false,"x":"At the office","y":"On the go"},{"text":8.5999999999999996,"font":{"size":14,"color":"white"},"showarrow":false,"x":"At a cafe","y":"On the go"},{"text":17.710000000000001,"font":{"size":14,"color":"white"},"showarrow":false,"x":"On the go","y":"On the go"},{"text":0,"font":{"size":14,"color":"white"},"showarrow":false,"x":"None of these","y":"On the go"},{"text":0.029999999999999999,"font":{"size":14,"color":"white"},"showarrow":false,"x":"At home","y":"None of these"},{"text":0,"font":{"size":14,"color":"white"},"showarrow":false,"x":"At the office","y":"None of these"},{"text":0.029999999999999999,"font":{"size":14,"color":"white"},"showarrow":false,"x":"At a cafe","y":"None of these"},{"text":0,"font":{"size":14,"color":"white"},"showarrow":false,"x":"On the go","y":"None of these"},{"text":0.93999999999999995,"font":{"size":14,"color":"white"},"showarrow":false,"x":"None of these","y":"None of these"}],"title":"Co-occurrence Heatmap: Where to drink coffee?","xaxis":{"domain":[0,1],"automargin":true,"title":"","type":"category","categoryorder":"array","categoryarray":["At home","At the office","At a cafe","On the go","None of these"]},"yaxis":{"domain":[0,1],"automargin":true,"title":"","type":"category","categoryorder":"array","categoryarray":["At home","At the office","At a cafe","On the go","None of these"]},"scene":{"zaxis":{"title":"Percentage"}},"hovermode":"closest","showlegend":false,"legend":{"yanchor":"top","y":0.5}},"source":"A","config":{"modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"data":[{"colorbar":{"title":"Percentage","ticklen":2,"len":0.5,"lenmode":"fraction","y":1,"yanchor":"top"},"colorscale":[["0","rgba(158,1,66,1)"],["0.0416666666666667","rgba(181,33,72,1)"],["0.0833333333333333","rgba(204,54,77,1)"],["0.125","rgba(221,75,77,1)"],["0.166666666666667","rgba(234,94,72,1)"],["0.208333333333333","rgba(245,115,69,1)"],["0.25","rgba(249,143,82,1)"],["0.291666666666667","rgba(253,169,94,1)"],["0.333333333333333","rgba(254,191,111,1)"],["0.375","rgba(254,212,128,1)"],["0.416666666666667","rgba(255,229,148,1)"],["0.458333333333333","rgba(255,242,169,1)"],["0.5","rgba(255,255,191,1)"],["0.541666666666667","rgba(245,251,175,1)"],["0.583333333333333","rgba(234,247,159,1)"],["0.625","rgba(216,239,155,1)"],["0.666666666666667","rgba(191,229,160,1)"],["0.708333333333333","rgba(166,219,164,1)"],["0.75","rgba(139,207,165,1)"],["0.791666666666667","rgba(109,196,165,1)"],["0.833333333333333","rgba(90,174,174,1)"],["0.875","rgba(69,150,183,1)"],["0.916666666666667","rgba(63,127,184,1)"],["0.958333333333333","rgba(83,103,173,1)"],["1","rgba(94,79,162,1)"]],"showscale":true,"x":["At home","At the office","At a cafe","On the go","None of these","At home","At the office","At a cafe","On the go","None of these","At home","At the office","At a cafe","On the go","None of these","At home","At the office","At a cafe","On the go","None of these","At home","At the office","At a cafe","On the go","None of these"],"y":["At home","At home","At home","At home","At home","At the office","At the office","At the office","At the office","At the office","At a cafe","At a cafe","At a cafe","At a cafe","At a cafe","On the go","On the go","On the go","On the go","On the go","None of these","None of these","None of these","None of these","None of these"],"z":[92.137382912290661,31.73431734317343,27.164348566562591,16.207777462390009,0.028384899233607722,31.73431734317343,36.21913142208345,11.921657678115242,9.9914845302299167,0,27.164348566562591,11.921657678115242,29.49191030371842,8.60062446778314,0.028384899233607722,16.207777462390009,9.9914845302299167,8.60062446778314,17.712177121771216,0,0.028384899233607722,0,0.028384899233607722,0,0.93670167470905485],"type":"heatmap","xaxis":"x","yaxis":"y","frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+</div>
+<div id="cups-per-day-across-age" class="section level3">
+<h3>Cups per day across age</h3>
+<pre class="r"><code>survey_tidy |&gt;
+  distinct(submission_id, age, cups) |&gt;
+  group_by(age, cups) |&gt;
+  summarise(total_cup = n()) |&gt;
+  mutate(prop_age = total_cup/sum(total_cup),
+         cups = fct_rev(cups)) |&gt; 
+  plot_ly(x = ~prop_age * 100, y = ~age,
+          color = ~cups, name = ~cups, type = &quot;bar&quot;, colors = &quot;viridis&quot;) |&gt;
+  layout(title = &quot;Cups per day across age&quot;,
+         xaxis = list(title = &quot;Percentage (%)&quot;),
+         yaxis = list(title = &quot;Age&quot;),
+         legend = list(orientation = &quot;h&quot;, 
+                       y = -0.3,
+                       title = list(text = &quot;&lt;b&gt;Cups of Coffee per day&lt;/b&gt;&quot;)),
+         barmode = &quot;stack&quot;)</code></pre>
+<div class="plotly html-widget html-fill-item" id="htmlwidget-253a744a09449d789f37" style="width:90%;height:460.8px;"></div>
+<script type="application/json" data-for="htmlwidget-253a744a09449d789f37">{"x":{"visdat":{"3a642ade189d":["function () ","plotlyVisDat"]},"cur_data":"3a642ade189d","attrs":{"3a642ade189d":{"x":{},"y":{},"name":{},"color":{},"colors":"viridis","alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"type":"bar"}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"title":"Cups per day across age","xaxis":{"domain":[0,1],"automargin":true,"title":"Percentage (%)"},"yaxis":{"domain":[0,1],"automargin":true,"title":"Age","type":"category","categoryorder":"array","categoryarray":[">65 years old","55-64 years old","45-54 years old","35-44 years old","25-34 years old","18-24 years old","<18 years old"]},"legend":{"orientation":"h","y":-0.29999999999999999,"title":{"text":"<b>Cups of Coffee per day<\/b>"}},"barmode":"stack","hovermode":"closest","showlegend":true},"source":"A","config":{"modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"data":[{"x":[5.4054054054054053,3.8216560509554141,4.6875,1.5366430260047281,0.8938547486033519,1.8087855297157622],"y":[">65 years old","55-64 years old","45-54 years old","35-44 years old","25-34 years old","18-24 years old"],"name":"More than 4","type":"bar","orientation":"h","marker":{"color":"rgba(68,1,84,1)","line":{"color":"rgba(68,1,84,1)"}},"textfont":{"color":"rgba(68,1,84,1)"},"error_y":{"color":"rgba(68,1,84,1)"},"error_x":{"color":"rgba(68,1,84,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[9.4594594594594597,7.6433121019108281,4.6875,3.7825059101654848,2.1229050279329607,2.0671834625323],"y":[">65 years old","55-64 years old","45-54 years old","35-44 years old","25-34 years old","18-24 years old"],"name":"4","type":"bar","orientation":"h","marker":{"color":"rgba(65,68,135,1)","line":{"color":"rgba(65,68,135,1)"}},"textfont":{"color":"rgba(65,68,135,1)"},"error_y":{"color":"rgba(65,68,135,1)"},"error_x":{"color":"rgba(65,68,135,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[16.216216216216218,20.382165605095544,14.84375,13.711583924349883,10.446927374301676,5.9431524547803614,7.6923076923076925],"y":[">65 years old","55-64 years old","45-54 years old","35-44 years old","25-34 years old","18-24 years old","<18 years old"],"name":"3","type":"bar","orientation":"h","marker":{"color":"rgba(42,120,142,1)","line":{"color":"rgba(42,120,142,1)"}},"textfont":{"color":"rgba(42,120,142,1)"},"error_y":{"color":"rgba(42,120,142,1)"},"error_x":{"color":"rgba(42,120,142,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[40.54054054054054,42.675159235668794,40.234375,45.035460992907801,42.178770949720672,34.883720930232556,38.461538461538467],"y":[">65 years old","55-64 years old","45-54 years old","35-44 years old","25-34 years old","18-24 years old","<18 years old"],"name":"2","type":"bar","orientation":"h","marker":{"color":"rgba(34,168,132,1)","line":{"color":"rgba(34,168,132,1)"}},"textfont":{"color":"rgba(34,168,132,1)"},"error_y":{"color":"rgba(34,168,132,1)"},"error_x":{"color":"rgba(34,168,132,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[21.621621621621621,20.382165605095544,29.6875,29.314420803782504,35.58659217877095,40.05167958656331,23.076923076923077],"y":[">65 years old","55-64 years old","45-54 years old","35-44 years old","25-34 years old","18-24 years old","<18 years old"],"name":"1","type":"bar","orientation":"h","marker":{"color":"rgba(122,209,81,1)","line":{"color":"rgba(122,209,81,1)"}},"textfont":{"color":"rgba(122,209,81,1)"},"error_y":{"color":"rgba(122,209,81,1)"},"error_x":{"color":"rgba(122,209,81,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[6.756756756756757,5.095541401273886,5.859375,6.6193853427895979,8.7709497206703908,15.245478036175712,30.76923076923077],"y":[">65 years old","55-64 years old","45-54 years old","35-44 years old","25-34 years old","18-24 years old","<18 years old"],"name":"Less than 1","type":"bar","orientation":"h","marker":{"color":"rgba(253,231,37,1)","line":{"color":"rgba(253,231,37,1)"}},"textfont":{"color":"rgba(253,231,37,1)"},"error_y":{"color":"rgba(253,231,37,1)"},"error_x":{"color":"rgba(253,231,37,1)"},"xaxis":"x","yaxis":"y","frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+</div>
+<div id="favorite-type-of-coffee-across-education-level"
+class="section level3">
+<h3>Favorite type of coffee across education level</h3>
+<pre class="r"><code>survey_tidy |&gt;
+  mutate(favorite = fct_rev(fct_infreq(favorite))) |&gt;
+  distinct(submission_id, education_level, favorite) |&gt;
+  group_by(education_level, favorite) |&gt;
+  summarise(total_fav = n()) |&gt;
+  mutate(prop_edu = total_fav/sum(total_fav)) |&gt;
+  plot_ly(x = ~prop_edu * 100, y = ~education_level,
+          color = ~favorite, name = ~favorite, type = &quot;bar&quot;, colors = &quot;viridis&quot;) |&gt;
+  layout(title = &quot;Favorite type of coffee across education level&quot;,
+         xaxis = list(title = &quot;Percentage (%)&quot;),
+         yaxis = list(title = &quot;Education Level&quot;),
+         legend = list(orientation = &quot;h&quot;, 
+                       y = -0.3,
+                       title = list(text = &quot;&lt;b&gt;Favorite Type of Coffee&lt;/b&gt;&quot;)),
+         barmode = &quot;stack&quot;)</code></pre>
+<div class="plotly html-widget html-fill-item" id="htmlwidget-d03239df75dc513a0080" style="width:90%;height:460.8px;"></div>
+<script type="application/json" data-for="htmlwidget-d03239df75dc513a0080">{"x":{"visdat":{"3a641e67bb4":["function () ","plotlyVisDat"]},"cur_data":"3a641e67bb4","attrs":{"3a641e67bb4":{"x":{},"y":{},"name":{},"color":{},"colors":"viridis","alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"type":"bar"}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"title":"Favorite type of coffee across education level","xaxis":{"domain":[0,1],"automargin":true,"title":"Percentage (%)"},"yaxis":{"domain":[0,1],"automargin":true,"title":"Education Level","type":"category","categoryorder":"array","categoryarray":["Doctorate or professional degree","Master's degree","Bachelor's degree","Some college or associate's degree","High school graduate","Less than high school"]},"legend":{"orientation":"h","y":-0.29999999999999999,"title":{"text":"<b>Favorite Type of Coffee<\/b>"}},"barmode":"stack","hovermode":"closest","showlegend":true},"source":"A","config":{"modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"data":[{"x":[0.88235294117647056,0.68027210884353739,1.1938601478112563,1.5217391304347827,3.3898305084745761,4.5454545454545459],"y":["Doctorate or professional degree","Master's degree","Bachelor's degree","Some college or associate's degree","High school graduate","Less than high school"],"name":"Blended drink","type":"bar","orientation":"h","marker":{"color":"rgba(68,1,84,1)","line":{"color":"rgba(68,1,84,1)"}},"textfont":{"color":"rgba(68,1,84,1)"},"error_y":{"color":"rgba(68,1,84,1)"},"error_x":{"color":"rgba(68,1,84,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[0.58823529411764708,2.5850340136054419,2.9562251279135872,3.0434782608695654,0.84745762711864403],"y":["Doctorate or professional degree","Master's degree","Bachelor's degree","Some college or associate's degree","High school graduate"],"name":"Cold brew","type":"bar","orientation":"h","marker":{"color":"rgba(72,33,115,1)","line":{"color":"rgba(72,33,115,1)"}},"textfont":{"color":"rgba(72,33,115,1)"},"error_y":{"color":"rgba(72,33,115,1)"},"error_x":{"color":"rgba(72,33,115,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[2.3529411764705883,2.8571428571428572,2.2740193291642981,4.3478260869565215,3.3898305084745761,4.5454545454545459],"y":["Doctorate or professional degree","Master's degree","Bachelor's degree","Some college or associate's degree","High school graduate","Less than high school"],"name":"Other","type":"bar","orientation":"h","marker":{"color":"rgba(67,62,133,1)","line":{"color":"rgba(67,62,133,1)"}},"textfont":{"color":"rgba(67,62,133,1)"},"error_y":{"color":"rgba(67,62,133,1)"},"error_x":{"color":"rgba(67,62,133,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[1.7647058823529411,2.1768707482993195,2.9562251279135872,4.7826086956521738,6.7796610169491522],"y":["Doctorate or professional degree","Master's degree","Bachelor's degree","Some college or associate's degree","High school graduate"],"name":"Mocha","type":"bar","orientation":"h","marker":{"color":"rgba(56,89,140,1)","line":{"color":"rgba(56,89,140,1)"}},"textfont":{"color":"rgba(56,89,140,1)"},"error_y":{"color":"rgba(56,89,140,1)"},"error_x":{"color":"rgba(56,89,140,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[3.2352941176470593,2.9931972789115644,4.3774872086412735,4.3478260869565215,4.2372881355932197],"y":["Doctorate or professional degree","Master's degree","Bachelor's degree","Some college or associate's degree","High school graduate"],"name":"Iced coffee","type":"bar","orientation":"h","marker":{"color":"rgba(45,112,142,1)","line":{"color":"rgba(45,112,142,1)"}},"textfont":{"color":"rgba(45,112,142,1)"},"error_y":{"color":"rgba(45,112,142,1)"},"error_x":{"color":"rgba(45,112,142,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[8.5294117647058822,7.3469387755102051,5.6281978396816372,5.4347826086956523,8.4745762711864394,4.5454545454545459],"y":["Doctorate or professional degree","Master's degree","Bachelor's degree","Some college or associate's degree","High school graduate","Less than high school"],"name":"Americano","type":"bar","orientation":"h","marker":{"color":"rgba(37,133,142,1)","line":{"color":"rgba(37,133,142,1)"}},"textfont":{"color":"rgba(37,133,142,1)"},"error_y":{"color":"rgba(37,133,142,1)"},"error_x":{"color":"rgba(37,133,142,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[7.9411764705882346,7.0748299319727899,8.5275724843661163,8.0434782608695645,3.3898305084745761],"y":["Doctorate or professional degree","Master's degree","Bachelor's degree","Some college or associate's degree","High school graduate"],"name":"Cortado","type":"bar","orientation":"h","marker":{"color":"rgba(30,155,138,1)","line":{"color":"rgba(30,155,138,1)"}},"textfont":{"color":"rgba(30,155,138,1)"},"error_y":{"color":"rgba(30,155,138,1)"},"error_x":{"color":"rgba(30,155,138,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[10.294117647058822,8.0272108843537424,7.8453666856168276,8.0434782608695645,9.3220338983050848,18.181818181818183],"y":["Doctorate or professional degree","Master's degree","Bachelor's degree","Some college or associate's degree","High school graduate","Less than high school"],"name":"Espresso","type":"bar","orientation":"h","marker":{"color":"rgba(43,176,127,1)","line":{"color":"rgba(43,176,127,1)"}},"textfont":{"color":"rgba(43,176,127,1)"},"error_y":{"color":"rgba(43,176,127,1)"},"error_x":{"color":"rgba(43,176,127,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[10,8.8435374149659864,8.1864695849914728,8.0434782608695645,8.4745762711864394,13.636363636363635],"y":["Doctorate or professional degree","Master's degree","Bachelor's degree","Some college or associate's degree","High school graduate","Less than high school"],"name":"Cappuccino","type":"bar","orientation":"h","marker":{"color":"rgba(81,196,106,1)","line":{"color":"rgba(81,196,106,1)"}},"textfont":{"color":"rgba(81,196,106,1)"},"error_y":{"color":"rgba(81,196,106,1)"},"error_x":{"color":"rgba(81,196,106,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[9.4117647058823533,11.972789115646258,10.517339397384879,10.869565217391305,14.40677966101695,4.5454545454545459],"y":["Doctorate or professional degree","Master's degree","Bachelor's degree","Some college or associate's degree","High school graduate","Less than high school"],"name":"Regular drip coffee","type":"bar","orientation":"h","marker":{"color":"rgba(133,213,74,1)","line":{"color":"rgba(133,213,74,1)"}},"textfont":{"color":"rgba(133,213,74,1)"},"error_y":{"color":"rgba(133,213,74,1)"},"error_x":{"color":"rgba(133,213,74,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[13.23529411764706,18.503401360544217,17.225696418419556,16.086956521739129,16.949152542372879,31.818181818181817],"y":["Doctorate or professional degree","Master's degree","Bachelor's degree","Some college or associate's degree","High school graduate","Less than high school"],"name":"Latte","type":"bar","orientation":"h","marker":{"color":"rgba(194,223,35,1)","line":{"color":"rgba(194,223,35,1)"}},"textfont":{"color":"rgba(194,223,35,1)"},"error_y":{"color":"rgba(194,223,35,1)"},"error_x":{"color":"rgba(194,223,35,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[31.764705882352938,26.938775510204081,28.311540648095505,25.434782608695649,20.33898305084746,18.181818181818183],"y":["Doctorate or professional degree","Master's degree","Bachelor's degree","Some college or associate's degree","High school graduate","Less than high school"],"name":"Pourover","type":"bar","orientation":"h","marker":{"color":"rgba(253,231,37,1)","line":{"color":"rgba(253,231,37,1)"}},"textfont":{"color":"rgba(253,231,37,1)"},"error_y":{"color":"rgba(253,231,37,1)"},"error_x":{"color":"rgba(253,231,37,1)"},"xaxis":"x","yaxis":"y","frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+</div>
+<div id="preferred-caffeine-across-self-rated-expertise"
+class="section level3">
+<h3>Preferred caffeine across self-rated expertise</h3>
+<pre class="r"><code>survey_tidy %&gt;% 
+  drop_na(expertise, caffeine) %&gt;% 
+  distinct(submission_id, expertise, caffeine) %&gt;% 
+  group_by(expertise, caffeine) %&gt;% 
+  summarize(count = n()) %&gt;% 
+  ungroup() %&gt;% 
+  mutate(text_label = str_c(&quot;Self-rated coffee expertise: &quot;, expertise, 
+                            &quot;\nPrefered caffeine: &quot;, caffeine,
+                            &quot;\nCount: &quot;, count)) %&gt;% 
+  plot_ly(x = ~expertise, y = ~count, text = ~text_label,
+          color = ~caffeine, name = ~caffeine, 
+          type = &quot;scatter&quot;, mode = &quot;lines&quot;, colors = &quot;viridis&quot;) %&gt;% 
+  layout(title = &quot;Preferred caffeine across self-rated expertise&quot;,
+         xaxis = list(title = &quot;Self-rated Coffee Expertise&quot;),
+         yaxis = list(title = &quot;Count&quot;),
+         legend = list(orientation = &quot;h&quot;, 
+                       y = -0.3,
+                       title = list(text = &quot;&lt;b&gt;Preferred Caffeine&lt;/b&gt;&quot;)))</code></pre>
+<div class="plotly html-widget html-fill-item" id="htmlwidget-3894ec41d7884908c32e" style="width:90%;height:460.8px;"></div>
+<script type="application/json" data-for="htmlwidget-3894ec41d7884908c32e">{"x":{"visdat":{"3a6410bb699a":["function () ","plotlyVisDat"]},"cur_data":"3a6410bb699a","attrs":{"3a6410bb699a":{"x":{},"y":{},"text":{},"mode":"lines","name":{},"color":{},"colors":"viridis","alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"type":"scatter"}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"title":"Preferred caffeine across self-rated expertise","xaxis":{"domain":[0,1],"automargin":true,"title":"Self-rated Coffee Expertise"},"yaxis":{"domain":[0,1],"automargin":true,"title":"Count"},"legend":{"orientation":"h","y":-0.29999999999999999,"title":{"text":"<b>Preferred Caffeine<\/b>"}},"hovermode":"closest","showlegend":true},"source":"A","config":{"modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"data":[{"x":[1,2,3,4,5,6,7,8,10],"y":[26,13,14,15,19,11,16,11,1],"text":["Self-rated coffee expertise: 1<br />Prefered caffeine: Decaf<br />Count: 26","Self-rated coffee expertise: 2<br />Prefered caffeine: Decaf<br />Count: 13","Self-rated coffee expertise: 3<br />Prefered caffeine: Decaf<br />Count: 14","Self-rated coffee expertise: 4<br />Prefered caffeine: Decaf<br />Count: 15","Self-rated coffee expertise: 5<br />Prefered caffeine: Decaf<br />Count: 19","Self-rated coffee expertise: 6<br />Prefered caffeine: Decaf<br />Count: 11","Self-rated coffee expertise: 7<br />Prefered caffeine: Decaf<br />Count: 16","Self-rated coffee expertise: 8<br />Prefered caffeine: Decaf<br />Count: 11","Self-rated coffee expertise: 10<br />Prefered caffeine: Decaf<br />Count: 1"],"mode":"lines","name":"Decaf","type":"scatter","marker":{"color":"rgba(68,1,84,1)","line":{"color":"rgba(68,1,84,1)"}},"textfont":{"color":"rgba(68,1,84,1)"},"error_y":{"color":"rgba(68,1,84,1)"},"error_x":{"color":"rgba(68,1,84,1)"},"line":{"color":"rgba(68,1,84,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[1,2,3,4,5,6,7,8,9],"y":[10,10,22,12,33,41,31,15,1],"text":["Self-rated coffee expertise: 1<br />Prefered caffeine: Half caff<br />Count: 10","Self-rated coffee expertise: 2<br />Prefered caffeine: Half caff<br />Count: 10","Self-rated coffee expertise: 3<br />Prefered caffeine: Half caff<br />Count: 22","Self-rated coffee expertise: 4<br />Prefered caffeine: Half caff<br />Count: 12","Self-rated coffee expertise: 5<br />Prefered caffeine: Half caff<br />Count: 33","Self-rated coffee expertise: 6<br />Prefered caffeine: Half caff<br />Count: 41","Self-rated coffee expertise: 7<br />Prefered caffeine: Half caff<br />Count: 31","Self-rated coffee expertise: 8<br />Prefered caffeine: Half caff<br />Count: 15","Self-rated coffee expertise: 9<br />Prefered caffeine: Half caff<br />Count: 1"],"mode":"lines","name":"Half caff","type":"scatter","marker":{"color":"rgba(33,144,141,1)","line":{"color":"rgba(33,144,141,1)"}},"textfont":{"color":"rgba(33,144,141,1)"},"error_y":{"color":"rgba(33,144,141,1)"},"error_x":{"color":"rgba(33,144,141,1)"},"line":{"color":"rgba(33,144,141,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[1,2,3,4,5,6,7,8,9,10],"y":[99,123,202,278,468,718,785,426,78,31],"text":["Self-rated coffee expertise: 1<br />Prefered caffeine: Full caffeine<br />Count: 99","Self-rated coffee expertise: 2<br />Prefered caffeine: Full caffeine<br />Count: 123","Self-rated coffee expertise: 3<br />Prefered caffeine: Full caffeine<br />Count: 202","Self-rated coffee expertise: 4<br />Prefered caffeine: Full caffeine<br />Count: 278","Self-rated coffee expertise: 5<br />Prefered caffeine: Full caffeine<br />Count: 468","Self-rated coffee expertise: 6<br />Prefered caffeine: Full caffeine<br />Count: 718","Self-rated coffee expertise: 7<br />Prefered caffeine: Full caffeine<br />Count: 785","Self-rated coffee expertise: 8<br />Prefered caffeine: Full caffeine<br />Count: 426","Self-rated coffee expertise: 9<br />Prefered caffeine: Full caffeine<br />Count: 78","Self-rated coffee expertise: 10<br />Prefered caffeine: Full caffeine<br />Count: 31"],"mode":"lines","name":"Full caffeine","type":"scatter","marker":{"color":"rgba(253,231,37,1)","line":{"color":"rgba(253,231,37,1)"}},"textfont":{"color":"rgba(253,231,37,1)"},"error_y":{"color":"rgba(253,231,37,1)"},"error_x":{"color":"rgba(253,231,37,1)"},"line":{"color":"rgba(253,231,37,1)"},"xaxis":"x","yaxis":"y","frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+</div>
+</div>
+</div>
 
 
 

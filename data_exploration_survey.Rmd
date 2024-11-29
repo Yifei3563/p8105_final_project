@@ -5,19 +5,20 @@ output:
     toc: true
     toc_float: true
     code_folding: hide
-
+editor_options: 
+  chunk_output_type: console
 ---
+
+
 ```{r setup, include=FALSE}
 library(tidyverse)
 library(ggplot2)
-library(modelr)
-library(haven)
 library(plotly)
-library(factoextra)
+library(Matrix)
 
 knitr::opts_chunk$set(
   fig.width = 6,
-  fig.asp = .6,
+  fig.asp = .8,
   out.width = "90%",
   warning = FALSE,
   message = FALSE
@@ -34,8 +35,9 @@ scale_colour_discrete = scale_colour_viridis_d
 scale_fill_discrete = scale_fill_viridis_d
 ```
 
+# Data Importing and Organizing
 
-```{r}
+```{r import_data}
 survey = read_csv("data/coffee_survey.csv") |>
   janitor::clean_names() |>
   select(-purchase_other, -favorite_specify, -additions_other, -prefer_abc, -prefer_ad, 
@@ -46,7 +48,7 @@ survey = read_csv("data/coffee_survey.csv") |>
   mutate_if(is.character, as.factor)
 ```
 
-```{r}
+```{r tidy_data}
 survey_tidy = 
   survey %>% 
   rename_with(
@@ -71,12 +73,223 @@ survey_tidy =
                              "coffee_d" ~ "Coffee D"),
     coffee_name = as.factor(coffee_name)
   ) %>% 
+  mutate(
+    age = factor(age, levels = rev(c("<18 years old", "18-24 years old", "25-34 years old", 
+                                "35-44 years old", "45-54 years old", "55-64 years old", 
+                                ">65 years old"))),
+    cups = factor(cups, levels = rev(c("More than 4", "4", "3", "2", "1", "Less than 1"))),
+    education_level = factor(education_level, 
+                             levels = c("Doctorate or professional degree", "Master's degree",
+                                        "Bachelor's degree", "Some college or associate's degree",
+                                        "High school graduate", "Less than high school")),
+    favorite = fct_recode(favorite, "Blended drink" = "Blended drink (e.g. Frappuccino)"),
+    most_paid = factor(most_paid, levels = c("Less than $2", "$2-$4", "$4-$6", "$6-$8", 
+                                             "$8-$10", "$10-$15", "$15-$20", "More than $20")),
+    most_willing = factor(most_willing, levels = c("Less than $2", "$2-$4", "$4-$6", "$6-$8", 
+                                             "$8-$10", "$10-$15", "$15-$20", "More than $20")),
+    total_spend = factor(total_spend, levels = c("<$20", "$20-$40", "$40-$60", "$60-$80", "$80-$100",
+                                                 ">$100")),
+    caffeine = factor(caffeine, levels = c("Decaf", "Half caff", "Full caffeine"))
+  ) %>% 
   relocate(prefer_overall, .after = everything())
+```
+
+# Exploratory Data Analysis
+
+## Characteristics and Lifestyle
+
+### Why do you drink coffee
+
+```{r why_drink}
+why_drink_df = 
+  survey_tidy %>% 
+  distinct(submission_id, why_drink) %>% 
+  drop_na(why_drink) %>% 
+  mutate(why_drink = str_split(why_drink, ", ")) %>% 
+  unnest(why_drink) %>% 
+  group_by(why_drink) %>% 
+  count() %>% 
+  ungroup() %>% 
+  mutate(why_drink = case_match(why_drink, 
+                                "I need the caffeine" ~ "Caffeine",
+                                "I need the ritual" ~ "Ritual",
+                                "It makes me go to the bathroom" ~ "To poop",
+                                "It tastes good" ~ "Tastes good",
+                                "Other" ~ "Other"))
+
+why_drink_df %>% 
+  mutate(why_drink = fct_reorder(why_drink, n),
+         why_drink = fct_rev(why_drink)) %>% 
+  plot_ly(x = ~why_drink, y = ~n,
+          color = ~why_drink, name = ~why_drink, type = "bar", colors = "viridis") %>% 
+  layout(title = "Why do you drink coffee?",
+         xaxis = list(title = "Reasons"),
+         yaxis = list(title = "Count"),
+         showlegend = FALSE)
+```
+
+
+### How do you brew coffee at home
+
+```{r how_brew}
+brew_df = 
+  survey_tidy %>% 
+  distinct(submission_id, brew) %>% 
+  drop_na(brew) %>% 
+  mutate(brew = str_split(brew, ", ")) %>% 
+  unnest(brew) %>% 
+  group_by(brew) %>% 
+  count() %>% 
+  ungroup() %>%
+  mutate(brew = str_replace(brew, "\\(.*", ""))
+
+brew_df %>% 
+  mutate(brew = fct_reorder(brew, n),
+         brew = fct_rev(brew)) %>% 
+  plot_ly(x = ~brew, y = ~n,
+          color = ~brew, name = ~brew, type = "bar", colors = "viridis") %>% 
+  layout(title = "How do you brew coffee at home?",
+         xaxis = list(title = "Methods"),
+         yaxis = list(title = "Count"),
+         showlegend = FALSE)
+```
+
+
+### Where do you drink coffee
+
+```{r where_drink_matrix}
+
+# Step 1: Prepare survey_long
+
+survey_long =
+  survey_tidy %>% 
+  select(submission_id, where_drink) %>% 
+  distinct(submission_id, .keep_all = TRUE) %>% 
+  separate_rows(where_drink, sep = ", ") %>% 
+  mutate(where_drink = str_trim(where_drink))
+
+
+# Step 2: Create the co-occurrence matrix
+
+co_occurrence =
+  survey_long %>%
+  mutate(value = 1) %>%
+  pivot_wider(names_from = where_drink, values_from = value, values_fill = 0) %>%
+  select(-submission_id) %>%
+  as.matrix() %>%
+  as("sparseMatrix")  # Convert to sparse matrix for efficient operations
+
+co_matrix = t(co_occurrence) %*% co_occurrence  # Calculate the co-occurrence matrix
+
+
+# Step 3: Calculate percentages (row normalization)
+
+total_submission = 
+  survey_tidy %>% 
+  select(submission_id, where_drink) %>% 
+  distinct(submission_id, .keep_all = TRUE) %>% 
+  count() %>% 
+  pull()
+
+co_matrix_percent = (co_matrix / total_submission) * 100 
+
+# Step 4: Subset for visualization
+
+top_categories = 
+  co_matrix %>% 
+  rowSums() %>% 
+  order(decreasing = TRUE)
+
+co_matrix_dense_subset = 
+  co_matrix_percent[top_categories, top_categories] %>% 
+  as.matrix()
+
+# Step 5: Create heatmap
+
+co_occurrence_df = 
+  co_matrix_dense_subset %>% 
+  reshape2::melt() %>% 
+  rename(
+    Category1 = Var1,
+    Category2 = Var2,
+    Percentage = value
+  )
+
+co_occurrence_df %>% 
+  plot_ly(x = ~Category1, y = ~Category2, z = ~Percentage, 
+          type = "heatmap", colors = "Spectral") %>% 
+  add_annotations(
+    text = ~round(Percentage, 2), 
+    font = list(size = 14, color = "white"), 
+    showarrow = FALSE) %>% 
+  layout(
+    title = "Co-occurrence Heatmap: Where to drink coffee?",
+    xaxis = list(title = ""),
+    yaxis = list(title = ""))
 ```
 
 
 
+### Cups per day across age
 
+```{r age_vs_cups}
+survey_tidy |>
+  distinct(submission_id, age, cups) |>
+  group_by(age, cups) |>
+  summarise(total_cup = n()) |>
+  mutate(prop_age = total_cup/sum(total_cup),
+         cups = fct_rev(cups)) |> 
+  plot_ly(x = ~prop_age * 100, y = ~age,
+          color = ~cups, name = ~cups, type = "bar", colors = "viridis") |>
+  layout(title = "Cups per day across age",
+         xaxis = list(title = "Percentage (%)"),
+         yaxis = list(title = "Age"),
+         legend = list(orientation = "h", 
+                       y = -0.3,
+                       title = list(text = "<b>Cups of Coffee per day</b>")),
+         barmode = "stack")
+```
 
+### Favorite type of coffee across education level
+
+```{r edu_vs_fav}
+survey_tidy |>
+  mutate(favorite = fct_rev(fct_infreq(favorite))) |>
+  distinct(submission_id, education_level, favorite) |>
+  group_by(education_level, favorite) |>
+  summarise(total_fav = n()) |>
+  mutate(prop_edu = total_fav/sum(total_fav)) |>
+  plot_ly(x = ~prop_edu * 100, y = ~education_level,
+          color = ~favorite, name = ~favorite, type = "bar", colors = "viridis") |>
+  layout(title = "Favorite type of coffee across education level",
+         xaxis = list(title = "Percentage (%)"),
+         yaxis = list(title = "Education Level"),
+         legend = list(orientation = "h", 
+                       y = -0.3,
+                       title = list(text = "<b>Favorite Type of Coffee</b>")),
+         barmode = "stack")
+```
+
+### Preferred caffeine across self-rated expertise
+
+```{r exper_vs_caff}
+survey_tidy %>% 
+  drop_na(expertise, caffeine) %>% 
+  distinct(submission_id, expertise, caffeine) %>% 
+  group_by(expertise, caffeine) %>% 
+  summarize(count = n()) %>% 
+  ungroup() %>% 
+  mutate(text_label = str_c("Self-rated coffee expertise: ", expertise, 
+                            "\nPrefered caffeine: ", caffeine,
+                            "\nCount: ", count)) %>% 
+  plot_ly(x = ~expertise, y = ~count, text = ~text_label,
+          color = ~caffeine, name = ~caffeine, 
+          type = "scatter", mode = "lines", colors = "viridis") %>% 
+  layout(title = "Preferred caffeine across self-rated expertise",
+         xaxis = list(title = "Self-rated Coffee Expertise"),
+         yaxis = list(title = "Count"),
+         legend = list(orientation = "h", 
+                       y = -0.3,
+                       title = list(text = "<b>Preferred Caffeine</b>")))
 ```
 
