@@ -102,6 +102,7 @@ lasso_cv =
 lambda_opt = lasso_cv[["lambda.min"]]
 ```
 
+Generating a sequence of lambda values to create a range of lambda values on a logarithmic scale to ensure our proper exploration of the regularization strength.
 
 
 ```{r}
@@ -116,6 +117,7 @@ lasso_fit |>
   theme(legend.position = "none")
 ```
 
+As lambda increases, the coefficients shrink toward zero.
 
 ```{r}
 lasso_cv |> 
@@ -124,6 +126,9 @@ lasso_cv |>
   geom_point()
 ```
 
+This plot visualizes the effect of different lambda values on the estimated coefficients.
+
+At smaller values of log(lambda, 10), the estimated coefficients are smaller or close to zero.As log(lambda, 10) increases, the coefficients stabilize and converge toward specific values.
 
 ```{r}
 lasso_fit = glmnet(x, y, lambda = lambda_opt)
@@ -131,8 +136,14 @@ lasso_fit = glmnet(x, y, lambda = lambda_opt)
 lasso_fit |> broom::tidy()
 ```
 
+The intercept value is 5.08, which represents the baseline predicted value of `total_cup_points` when all predictors are zero.
 
+All predictors (`aroma`, `flavor`, `aftertaste`, `acidity`, `body`, `balance`, `sweetness`) have non-zero coefficients, indicating they contribute to the model at the optimal lambda.
 
+`flavor` has the largest coefficient with the value of 1.97, suggesting that flavor is the most influential predictor in determining the total cup points.
 
+`body`(0.579) and `acidity`(0.895) have relatively the smallest coefficients, indicating that they have a weaker influence on the total cup points compared to others variables.
+
+The deviance ratio is 0.923, suggesting that the model explains a significant portion of the variability in `total_cup_points.`
 
 
