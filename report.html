@@ -451,14 +451,7 @@ robusta)</p></li>
 <li><p><code>acidity</code>: Acidity grade</p></li>
 <li><p><code>body</code>: Body grade</p></li>
 <li><p><code>balance</code>: Balance grade</p></li>
-<li><p><code>Uniformity grade</code>: Uniformity grade</p></li>
-<li><p><code>clean_cup</code>: Clean cup grade</p></li>
 <li><p><code>sweetness</code>: Sweetness grade</p></li>
-<li><p><code>cupper_points</code>: Cupper Points</p></li>
-<li><p><code>moisture</code>: Moisture Grade</p></li>
-<li><p><code>color</code>: Color of bean</p></li>
-<li><p><code>altitude_low_meters</code>: Altitude low meters</p></li>
-<li><p><code>altitude_high_meters</code>: Altitude high meters</p></li>
 <li><p><code>altitude_mean_meters</code>: Altitude mean meters</p></li>
 </ul>
 </div>
@@ -482,6 +475,20 @@ characteristics.</p></li>
 </div>
 <div id="exploratory-analysis" class="section level2">
 <h2>Exploratory Analysis</h2>
+<div id="ratings-data" class="section level5">
+<h5>Ratings Data</h5>
+<p>For the ratings data, we first filtered out the variables needed for
+our project analysis then removed the unnecessary ones. We created a new
+column named <code>grading_year</code> by extracting the year as a
+four-digit number from the grading_date column using the
+<code>str_extract</code> function. This isolates the year, because we
+want to analyze the coffee ratings based on the year instead of focusing
+on a specific month and date. Additionally, the <code>species</code>,
+<code>variety</code>, and <code>processing_method</code> columns are
+converted into factors using the <code>as.factor</code> function. This
+step ensures that these variables are treated as categorical variables,
+making them suitable for our later statistical analysis.</p>
+</div>
 </div>
 <div id="discussion" class="section level2">
 <h2>Discussion</h2>
