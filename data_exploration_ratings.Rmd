@@ -183,7 +183,7 @@ ratings_df |>
          yaxis = list(title = "Total Cup Points"))
 ```
 
-We removed outliers by using the interquartile range (IQR) method to identify and filter extreme values. After removing outliers, the boxplot shows a more compact and representative distribution for both Arabica and Robusta species. The general trends remain the same, with Arabica having a slightly higher median and a wider data range than Robusta.
+This boxplot reveals that Arabica species has a slightly higher median total cup points than Robusta, with a narrower range and fewer outliers while Robusta shows a wider range of quality and lower median total cup points.
 
 ### Proportion of Processing Methods
 
