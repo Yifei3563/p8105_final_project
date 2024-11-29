@@ -10,6 +10,6 @@ output:
 # Not your average joe
 ## What Makes the Best Coffee?
 
-![]()
+![](home_picture.png)
 
 
