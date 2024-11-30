@@ -107,7 +107,7 @@ survey_tidy =
 survey_model = survey_tidy |>
   distinct(submission_id, .keep_all = TRUE) |>
   select(expertise, age, favorite, style, strength, roast_level,
-       caffeine, gender, education_level, bitterness, acidity) |>
+       caffeine, gender, education_level, bitterness, acidity, prefer_overall) |>
   na.omit() |>
   slice_sample(n = 1000)
 
@@ -135,7 +135,7 @@ lasso_fit_best |>
 
 ### Multiple Linear Regression
 
-```{r, include = FALSE}
+```{r, results='hide'}
 full_mlr = lm(expertise ~ age + favorite + style + strength + roast_level +
        caffeine + gender + education_level + acidity + bitterness, data = survey_model)
 
@@ -151,6 +151,24 @@ summary(final_mlr)
 plot(final_mlr, which = 1)
 plot(final_mlr, which = 2)
 plot(final_mlr, which = 5)
+```
+
+### Log linear model
+
+```{r, results='hide'}
+library("MASS")
+contingency_table <- xtabs(expertise ~ age + style + strength + roast_level + 
+    caffeine + gender + prefer_overall, data = survey_model)
+print(contingency_table)
+
+stepwise_model <- step(loglm(expertise ~ (age + style + strength + roast_level + caffeine + gender +
+                                            prefer_overall)^2, data = contingency_table))
+
+detach("package:MASS", unload = TRUE)
+```
+
+```{r}
+summary(stepwise_model)
 ```
 
 ## Factors that influence survey ratings
@@ -221,4 +239,7 @@ survey_anova |>
 
 print(pairwise_preference)
 ```
+
+
+
 
