@@ -5,7 +5,8 @@ output:
     toc: true
     toc_float: true
     code_folding: hide
-
+editor_options: 
+  chunk_output_type: console
 ---
 ```{r setup, include=FALSE}
 library(tidyverse)
@@ -14,6 +15,7 @@ library(modelr)
 library(haven)
 library(plotly)
 library(factoextra)
+library(glmnet)
 
 knitr::opts_chunk$set(
   fig.width = 6,
@@ -34,4 +36,189 @@ scale_colour_discrete = scale_colour_viridis_d
 scale_fill_discrete = scale_fill_viridis_d
 ```
 
+
+```{r import_data, include=FALSE}
+survey = read_csv("data/coffee_survey.csv") |>
+  janitor::clean_names() |>
+  select(-purchase_other, -favorite_specify, -additions_other, -prefer_abc, -prefer_ad, 
+         -why_drink_other, -know_source, -value_cafe, -value_equipment, -gender_specify, 
+         -ethnicity_race_specify, -number_children, -political_affiliation, 
+         -coffee_a_notes, -coffee_b_notes, -coffee_c_notes, -coffee_d_notes) |>
+  drop_na(gender) |>
+  mutate_if(is.character, as.factor)
+```
+
+
+```{r tidy_data, include=FALSE}
+survey_tidy = 
+  survey %>% 
+  rename_with(
+    ~ sub("personal_preference", "preference", .),
+    .cols = ends_with("personal_preference")
+  ) %>% 
+  pivot_longer(
+    cols = coffee_a_bitterness:coffee_d_preference,
+    values_to = "score",
+    names_to = c("coffee_name", "coffee_feature"),
+    names_pattern = "(.*)_(.*)"
+  ) %>% 
+  pivot_wider(
+    names_from = coffee_feature,
+    values_from = score
+  ) %>% 
+  mutate(
+    coffee_name = case_match(coffee_name,
+                             "coffee_a" ~ "Coffee A",
+                             "coffee_b" ~ "Coffee B",
+                             "coffee_c" ~ "Coffee C",
+                             "coffee_d" ~ "Coffee D"),
+    coffee_name = as.factor(coffee_name)
+  ) %>% 
+  mutate(
+    age = factor(age, levels = rev(c("<18 years old", "18-24 years old", "25-34 years old", 
+                                "35-44 years old", "45-54 years old", "55-64 years old", 
+                                ">65 years old"))),
+    cups = factor(cups, levels = rev(c("More than 4", "4", "3", "2", "1", "Less than 1"))),
+    education_level = factor(education_level, 
+                             levels = c("Doctorate or professional degree", "Master's degree",
+                                        "Bachelor's degree", "Some college or associate's degree",
+                                        "High school graduate", "Less than high school")),
+    favorite = fct_recode(favorite, "Blended drink" = "Blended drink (e.g. Frappuccino)"),
+    most_paid = factor(most_paid, levels = c("Less than $2", "$2-$4", "$4-$6", "$6-$8", 
+                                             "$8-$10", "$10-$15", "$15-$20", "More than $20")),
+    most_willing = factor(most_willing, levels = c("Less than $2", "$2-$4", "$4-$6", "$6-$8", 
+                                             "$8-$10", "$10-$15", "$15-$20", "More than $20")),
+    total_spend = factor(total_spend, levels = c("<$20", "$20-$40", "$40-$60", "$60-$80", "$80-$100",
+                                                 ">$100")),
+    caffeine = factor(caffeine, levels = c("Decaf", "Half caff", "Full caffeine")),
+    expertise = as.numeric(expertise),
+    bitterness = as.numeric(bitterness),
+    acidity = as.numeric(acidity),
+    preference = as.numeric(preference)
+  ) %>% 
+  relocate(prefer_overall, .after = everything())
+```
+
+## Factors that influence people's self-perceived expertise
+
+### Lasso
+
+```{r}
+survey_model = survey_tidy |>
+  distinct(submission_id, .keep_all = TRUE) |>
+  select(expertise, age, favorite, style, strength, roast_level,
+       caffeine, gender, education_level, bitterness, acidity) |>
+  na.omit() |>
+  slice_sample(n = 1000)
+
+x = model.matrix(expertise ~ ., data = survey_model)[, -1]
+y = survey_model |> pull(expertise)
+
+lambda = 10^seq(-2, 2.75, by = 0.1)
+
+lasso_fit = 
+  glmnet(x = x, y = y, lambda = lambda)
+
+lasso_cv = 
+  cv.glmnet(x = x, y = y, lambda = lambda)
+
+## lambda of the best fit
+lambda_opt = lasso_cv[["lambda.min"]]
+
+lasso_fit_best = 
+  glmnet(x = x, y = y, lambda = lambda_opt)
+
+lasso_fit_best |>
+  broom::tidy() |>
+  print(n = 50)
+```
+
+### Multiple Linear Regression
+
+```{r, include = FALSE}
+full_mlr = lm(expertise ~ age + favorite + style + strength + roast_level +
+       caffeine + gender + education_level + acidity + bitterness, data = survey_model)
+
+step(full_mlr, direction = "backward")
+
+final_mlr = lm(expertise ~ age + style + strength + roast_level + 
+    caffeine + gender, data = survey_model)
+```
+
+```{r}
+summary(final_mlr)
+
+plot(final_mlr, which = 1)
+plot(final_mlr, which = 2)
+plot(final_mlr, which = 5)
+```
+
+## Factors that influence survey ratings
+
+```{r}
+
+```
+
+## Difference among bitterness, acidity, and preference
+
+```{r}
+survey_anova = survey_tidy |>
+  select(coffee_name, bitterness, acidity, preference) |>
+  na.omit() |>
+  slice_sample(n = 1000)
+```
+
+### Bitterness:
+
+```{r}
+anova_bitterness = aov(bitterness ~ coffee_name, data = survey_anova)
+
+summary(anova_bitterness)
+
+pairwise_bitterness = pairwise.t.test(survey_anova$bitterness, survey_anova$coffee_name, 
+                                    p.adjust.method = "bonferroni")
+
+survey_anova |>
+  group_by(coffee_name) |>
+  summarise(
+    mean_bitterness = mean(bitterness))
+
+print(pairwise_bitterness)
+```
+
+### Acidity:
+
+```{r}
+anova_acidity = aov(acidity ~ coffee_name, data = survey_anova)
+
+summary(anova_acidity)
+
+pairwise_acidity = pairwise.t.test(survey_anova$acidity, survey_anova$coffee_name, 
+                                    p.adjust.method = "bonferroni")
+
+survey_anova |>
+  group_by(coffee_name) |>
+  summarise(
+    mean_acidity = mean(acidity))
+
+print(pairwise_acidity)
+```
+
+### Preference
+
+```{r}
+anova_preference = aov(preference ~ coffee_name, data = survey_anova)
+
+summary(anova_preference)
+
+pairwise_preference = pairwise.t.test(survey_anova$preference, survey_anova$coffee_name, 
+                                    p.adjust.method = "bonferroni")
+
+survey_anova |>
+  group_by(coffee_name) |>
+  summarise(
+    mean_preference = mean(preference))
+
+print(pairwise_preference)
+```
 
