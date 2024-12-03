@@ -96,9 +96,35 @@ survey_tidy =
 
 # Exploratory Data Analysis
 
-## Characteristics and Lifestyle
+## Coffee-related Lifestyle
 
-### Why do you drink coffee
+### Brewing Methods
+
+```{r how_brew}
+brew_df = 
+  survey_tidy %>% 
+  distinct(submission_id, brew) %>% 
+  drop_na(brew) %>% 
+  mutate(brew = str_split(brew, ", ")) %>% 
+  unnest(brew) %>% 
+  group_by(brew) %>% 
+  count() %>% 
+  ungroup() %>%
+  mutate(brew = str_replace(brew, "\\(.*", ""))
+
+brew_df %>% 
+  mutate(brew = fct_reorder(brew, n),
+         brew = fct_rev(brew)) %>% 
+  plot_ly(x = ~brew, y = ~n,
+          color = ~brew, name = ~brew, type = "bar", colors = "viridis") %>% 
+  layout(title = "How Do You Brew Coffee at Home?",
+         xaxis = list(title = "Methods"),
+         yaxis = list(title = "Count"),
+         showlegend = FALSE)
+```
+
+
+### Why Drink
 
 ```{r why_drink}
 why_drink_df = 
@@ -122,40 +148,14 @@ why_drink_df %>%
          why_drink = fct_rev(why_drink)) %>% 
   plot_ly(x = ~why_drink, y = ~n,
           color = ~why_drink, name = ~why_drink, type = "bar", colors = "viridis") %>% 
-  layout(title = "Why do you drink coffee?",
+  layout(title = "Why Do You Drink Coffee?",
          xaxis = list(title = "Reasons"),
          yaxis = list(title = "Count"),
          showlegend = FALSE)
 ```
 
 
-### How do you brew coffee at home
-
-```{r how_brew}
-brew_df = 
-  survey_tidy %>% 
-  distinct(submission_id, brew) %>% 
-  drop_na(brew) %>% 
-  mutate(brew = str_split(brew, ", ")) %>% 
-  unnest(brew) %>% 
-  group_by(brew) %>% 
-  count() %>% 
-  ungroup() %>%
-  mutate(brew = str_replace(brew, "\\(.*", ""))
-
-brew_df %>% 
-  mutate(brew = fct_reorder(brew, n),
-         brew = fct_rev(brew)) %>% 
-  plot_ly(x = ~brew, y = ~n,
-          color = ~brew, name = ~brew, type = "bar", colors = "viridis") %>% 
-  layout(title = "How do you brew coffee at home?",
-         xaxis = list(title = "Methods"),
-         yaxis = list(title = "Count"),
-         showlegend = FALSE)
-```
-
-
-### Where do you drink coffee
+### Where to Drink
 
 ```{r where_drink_matrix}
 
@@ -223,14 +223,14 @@ co_occurrence_df %>%
     font = list(size = 14, color = "white"), 
     showarrow = FALSE) %>% 
   layout(
-    title = "Co-occurrence Heatmap: Where to drink coffee?",
+    title = "Co-occurrence Heatmap: Where Do You Drink Coffee?",
     xaxis = list(title = ""),
     yaxis = list(title = ""))
 ```
 
 
 
-### Cups per day across age
+### Cups per day
 
 ```{r age_vs_cups}
 survey_tidy |>
@@ -241,7 +241,7 @@ survey_tidy |>
          cups = fct_rev(cups)) |> 
   plot_ly(x = ~prop_age * 100, y = ~age,
           color = ~cups, name = ~cups, type = "bar", colors = "viridis") |>
-  layout(title = "Cups per day across age",
+  layout(title = "Cups per day Across Age",
          xaxis = list(title = "Percentage (%)"),
          yaxis = list(title = "Age"),
          legend = list(orientation = "h", 
@@ -250,7 +250,7 @@ survey_tidy |>
          barmode = "stack")
 ```
 
-### Favorite type of coffee across education level
+### Favorite Coffee
 
 ```{r edu_vs_fav}
 survey_tidy |>
@@ -261,7 +261,7 @@ survey_tidy |>
   mutate(prop_edu = total_fav/sum(total_fav)) |>
   plot_ly(x = ~prop_edu * 100, y = ~education_level,
           color = ~favorite, name = ~favorite, type = "bar", colors = "viridis") |>
-  layout(title = "Favorite type of coffee across education level",
+  layout(title = "Favorite Type of Coffee Across Education Level",
          xaxis = list(title = "Percentage (%)"),
          yaxis = list(title = "Education Level"),
          legend = list(orientation = "h", 
@@ -270,7 +270,28 @@ survey_tidy |>
          barmode = "stack")
 ```
 
-### Preferred caffeine across self-rated expertise
+
+### Total Spend
+
+```{r total_spend_edu}
+survey_tidy %>% 
+  drop_na(total_spend, education_level) %>% 
+  distinct(submission_id, total_spend, education_level) %>% 
+  group_by(total_spend, education_level) %>% 
+  summarize(count = n()) %>% 
+  ungroup() %>% 
+  plot_ly(x = ~total_spend, y = ~count,
+          color = ~education_level, name = ~education_level, 
+          type = "scatter", mode = "lines", colors = "viridis") %>% 
+  layout(title = "Total Spend on Coffee per month Across Education Level",
+         xaxis = list(title = "Total Spend on Coffee (per month)"),
+         yaxis = list(title = "Count"),
+         legend = list(orientation = "h", 
+                       y = -0.3,
+                       title = list(text = "<b>Education Level</b>")))
+```
+
+### Caffeine & Expertise
 
 ```{r exper_vs_caff}
 survey_tidy %>% 
@@ -285,7 +306,7 @@ survey_tidy %>%
   plot_ly(x = ~expertise, y = ~count, text = ~text_label,
           color = ~caffeine, name = ~caffeine, 
           type = "scatter", mode = "lines", colors = "viridis") %>% 
-  layout(title = "Preferred caffeine across self-rated expertise",
+  layout(title = "Preferred Caffeine Across Self-rated Expertise",
          xaxis = list(title = "Self-rated Coffee Expertise"),
          yaxis = list(title = "Count"),
          legend = list(orientation = "h", 
@@ -293,7 +314,8 @@ survey_tidy %>%
                        title = list(text = "<b>Preferred Caffeine</b>")))
 ```
 
-### Most willing to pay vs. Most paid
+
+### Most willing to pay & Most paid
 
 ```{r paid_willing_matrix}
 survey_tidy %>% 
@@ -309,36 +331,14 @@ survey_tidy %>%
     font = list(size = 14, color = "white"), 
     showarrow = FALSE) %>% 
   layout(
-    title = "Most willing to pay vs Most paid (per cup)",
+    title = "Most Willing to Pay vs. Most Paid (per cup)",
     xaxis = list(title = "Most Paid (per cup)"),
     yaxis = list(title = "Most Willing to Pay (per cup)"))
 ```
 
-## Total money spend on coffee per month vs. Education level
-
-```{r total_spend_edu}
-survey_tidy %>% 
-  drop_na(total_spend, education_level) %>% 
-  distinct(submission_id, total_spend, education_level) %>% 
-  group_by(total_spend, education_level) %>% 
-  summarize(count = n()) %>% 
-  ungroup() %>% 
-  plot_ly(x = ~total_spend, y = ~count,
-          color = ~education_level, name = ~education_level, 
-          type = "scatter", mode = "lines", colors = "viridis") %>% 
-  layout(title = "Total Spend on Coffee vs. Education Level",
-         xaxis = list(title = "Total Spend on Coffee (per month)"),
-         yaxis = list(title = "Count"),
-         legend = list(orientation = "h", 
-                       y = -0.3,
-                       title = list(text = "<b>Education Level</b>")))
-```
-
-
-
 ## Coffee Ratings
 
-### Overall preference
+### Overall Preference
 
 ```{r overall_prefer}
 colors = c('rgb(221, 170, 204)', 
@@ -359,11 +359,9 @@ survey_tidy %>%
                   line = list(color = '#FFFFFF', width = 1))
     ) %>% 
   layout(
-    title = "Overall preference of coffee"
+    title = "Overall Preference of Coffee"
   )
 ```
-
-### Overall preference across self-rated expertise
 
 ```{r expertise_prefer}
 survey_tidy %>% 
@@ -374,7 +372,7 @@ survey_tidy %>%
   plot_ly(x = ~expertise, y = ~(prop * 100),
           color = ~prefer_overall, name = ~prefer_overall, 
           type = "bar", colors = "viridis") %>% 
-  layout(title = "Overall preference across self-rated expertise",
+  layout(title = "Overall Preference Across Self-rated Expertise",
          xaxis = list(title = "Self-rated Coffee Expertise"),
          yaxis = list(title = "Percentage (%)"),
          legend = list(orientation = "h", 
@@ -384,7 +382,7 @@ survey_tidy %>%
          barmode = "stack")
 ```
 
-### How do you rate each coffee
+### Preference Ratings
 
 ```{r prefer_each}
 survey_tidy %>% 
@@ -397,14 +395,14 @@ survey_tidy %>%
   geom_line(aes(group = 1), color = "black", size = 1, alpha = 0.8) +
   facet_grid(. ~ coffee_name) +
   labs(
-    title = "How do you rate each coffee",
+    title = "How Do You Rate Each Coffee",
     x = "Preference Ratings",
     y = "Count",
     fill = "Coffee Name")
 ```
 
 
-### How do you rate the flavor
+### Flavor Ratings
 
 ```{r coffee_taste}
 plot_acidity = 
