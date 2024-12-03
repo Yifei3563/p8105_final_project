@@ -10,12 +10,10 @@ editor_options:
 ---
 ```{r setup, include=FALSE}
 library(tidyverse)
-library(ggplot2)
 library(modelr)
-library(haven)
-library(plotly)
-library(factoextra)
 library(glmnet)
+library(plotly)
+set.seed(1)
 
 knitr::opts_chunk$set(
   fig.width = 6,
@@ -40,7 +38,7 @@ scale_fill_discrete = scale_fill_viridis_d
 ```{r import_data, include=FALSE}
 survey = read_csv("data/coffee_survey.csv") |>
   janitor::clean_names() |>
-  select(-purchase_other, -favorite_specify, -additions_other, -prefer_abc, -prefer_ad, 
+  select(-purchase_other, -favorite_specify, -additions_other, -prefer_abc,  
          -why_drink_other, -know_source, -value_cafe, -value_equipment, -gender_specify, 
          -ethnicity_race_specify, -number_children, -political_affiliation, 
          -coffee_a_notes, -coffee_b_notes, -coffee_c_notes, -coffee_d_notes) |>
@@ -96,7 +94,7 @@ survey_tidy =
     acidity = as.numeric(acidity),
     preference = as.numeric(preference)
   ) %>% 
-  relocate(prefer_overall, .after = everything())
+  relocate(prefer_ad, prefer_overall, .after = everything())
 ```
 
 ## Factors that influence people's self-perceived expertise
@@ -157,12 +155,13 @@ plot(final_mlr, which = 5)
 
 ```{r, results='hide'}
 library("MASS")
-contingency_table <- xtabs(expertise ~ age + style + strength + roast_level + 
+contingency_table = xtabs(expertise ~ age + style + strength + roast_level + 
     caffeine + gender + prefer_overall, data = survey_model)
 print(contingency_table)
 
-stepwise_model <- step(loglm(expertise ~ (age + style + strength + roast_level + caffeine + gender +
-                                            prefer_overall)^2, data = contingency_table))
+stepwise_model = step(loglm(expertise ~ (age + style + strength + roast_level + 
+                                           caffeine + gender + prefer_overall)^2, 
+                            data = contingency_table))
 
 detach("package:MASS", unload = TRUE)
 ```
@@ -171,11 +170,84 @@ detach("package:MASS", unload = TRUE)
 summary(stepwise_model)
 ```
 
-## Factors that influence survey ratings
+## Coffee A or Coffee D?
 
-```{r}
+```{r coffee_ad_logistic}
+coffee_ad_df = 
+  survey_tidy %>% 
+  distinct(submission_id, prefer_ad, gender, age, expertise, style, strength, caffeine) %>%
+  filter(
+    gender %in% c("Male", "Female", "Non-binary"),
+    age != "<18 years old"
+  ) %>% 
+  mutate(prefer_ad = if_else(prefer_ad == "Coffee D", 1, 0))
 
+bootstraps_ad = 
+  coffee_ad_df %>% 
+  bootstrap(100) %>% 
+  mutate(
+    strap = map(strap, as_tibble),
+    models = map(strap, \(df) glm(prefer_ad ~ gender + age + expertise + style + 
+                                    strength + caffeine, data = df, family = "binomial")),
+    results = map(models, broom::tidy)
+  ) %>% 
+  select(.id, results) %>% 
+  unnest(results)
+
+ad_results = 
+  bootstraps_ad %>% 
+  group_by(term) %>% 
+  summarize(
+    boot_mean = mean(estimate),
+    boot_se = sd(estimate)
+  ) 
+
+ad_results %>% 
+  knitr::kable(digits = 3)
 ```
+
+```{r bootstraps_ad_plot, fig.asp = 1.1}
+bootstraps_ad %>% 
+  mutate(term = fct_reorder(term, estimate)) %>% 
+  group_by(term) %>% 
+  plot_ly(x = ~estimate, 
+          color = ~term, 
+          type = "box", 
+          colors = "viridis",
+          showlegend = FALSE) %>% 
+  layout(title = "Distribution of terms",
+         xaxis = list(title = "Estimate"),
+         yaxis = list(title = "Term"))
+```
+
+```{r coffee_ad_predict}
+# Prepare coefficients
+intercept = 
+  ad_results %>% 
+  filter(term == "(Intercept)") %>% 
+  pull(boot_mean)
+
+coefs =
+  ad_results %>% 
+  filter(term != "(Intercept)") %>%
+  select(term, boot_mean) %>%
+  deframe()  # Converts to named vector
+
+new_data = 
+  coffee_ad_df %>% 
+  filter(submission_id == "WApbYk") %>% 
+  select(-submission_id, -prefer_ad) %>% 
+  model.matrix(~ . - 1, data = .) %>% 
+  as_tibble()
+
+# Compute logit (linear predictor)
+logit = intercept + sum(coefs * new_data)
+
+# Convert logit to probability
+predicted_prob <- 1 / (1 + exp(-logit))
+predicted_prob
+```
+
 
 ## Difference among bitterness, acidity, and preference
 
@@ -186,7 +258,7 @@ survey_anova = survey_tidy |>
   slice_sample(n = 1000)
 ```
 
-### Bitterness:
+### Bitterness
 
 ```{r}
 anova_bitterness = aov(bitterness ~ coffee_name, data = survey_anova)
@@ -204,7 +276,7 @@ survey_anova |>
 print(pairwise_bitterness)
 ```
 
-### Acidity:
+### Acidity
 
 ```{r}
 anova_acidity = aov(acidity ~ coffee_name, data = survey_anova)

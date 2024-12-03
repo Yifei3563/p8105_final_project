@@ -118,6 +118,8 @@ In October 2023, "world champion barista" James Hoffmann and coffee company Come
 
 * `preference`: Personal preference rating
 
+* `prefer_ad`: Prefer coffee A or D
+
 * `prefer_overall`: Favorite overall coffee among 4 cups
 
 
