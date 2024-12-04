@@ -139,7 +139,7 @@ lasso_fit_best |>
 
 ```{r, results='hide'}
 full_mlr = lm(expertise ~ age + favorite + style + strength + roast_level +
-       caffeine + gender + education_leveldata = survey_model)
+       caffeine + gender + education_level, data = survey_model)
 
 step(full_mlr, direction = "backward")
 
