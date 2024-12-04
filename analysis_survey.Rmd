@@ -158,6 +158,43 @@ plot(final_mlr, which = 2)
 plot(final_mlr, which = 5)
 ```
 
+```{r}
+bootstraps_survey = 
+  survey_model |>
+  bootstrap(100) |>
+  mutate(
+    strap = map(strap, as_tibble),
+    models = map(strap, \(df) lm(expertise ~ age + style + strength + roast_level + caffeine + gender, data = df)),
+    results = map(models, broom::tidy)
+  ) |> 
+  select(.id, results) |>
+  unnest(results)
+
+bootstrap_results = 
+  bootstraps_survey |>
+  group_by(term) |>
+  summarize(
+    boot_mean = mean(estimate),
+    boot_se = sd(estimate)
+  ) 
+
+bootstrap_results %>% 
+  knitr::kable(digits = 3)
+
+bootstraps_survey %>% 
+  mutate(term = fct_reorder(term, estimate)) %>% 
+  group_by(term) %>% 
+  plot_ly(x = ~estimate, 
+          color = ~term, 
+          type = "box", 
+          colors = "viridis",
+          showlegend = FALSE) %>% 
+  layout(title = "Distribution of terms",
+         xaxis = list(title = "Estimate"),
+         yaxis = list(title = "Term"))
+```
+
+
 ### Log linear model
 
 ```{r, results='hide'}
