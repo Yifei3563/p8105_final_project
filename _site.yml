@@ -3,15 +3,13 @@ output_dir: "."
 navbar:
   title: "Home"
   right:
-    - text: "About"
-      href: about.html
-    - text: "Data Exploration"
+    - text: "Exploratory Analysis"
       menu:
         - text: "Ratings Data"
           href: data_exploration_ratings.html
         - text: "Survey Data"
           href: data_exploration_survey.html
-    - text: "Analysis"
+    - text: "Statistical Analysis"
       menu:
         - text: "Ratings Data"
           href: analysis_ratings.html
