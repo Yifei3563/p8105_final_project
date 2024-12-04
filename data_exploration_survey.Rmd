@@ -123,6 +123,7 @@ brew_df %>%
          showlegend = FALSE)
 ```
 
+The distribution of coffee brewing methods shows that the most amount of people (more than 2000) drink pour-over coffee, following by espresso and French press. 
 
 ### Why Drink
 
@@ -154,6 +155,7 @@ why_drink_df %>%
          showlegend = FALSE)
 ```
 
+This bar plot shows that most people drink coffee because it tastes good, while many people also drink it for caffeine and ritual. This forms an interesting comparison between drinking for personal likeness and for work efficiency. 
 
 ### Where to Drink
 
@@ -228,7 +230,7 @@ co_occurrence_df %>%
     yaxis = list(title = ""))
 ```
 
-
+On the diagonal line of this heatmap, where each variable meets itself, the number stands for the percent of people in the dataset who choose this location to drink coffee. For example, around 92.14% of people choose to drink coffee at home. Because this categorical variable comes from a multiple choice question that allows people to choose several answers, the corresponding cell of different levels means the percent of people who choose the first level of the variable while also choosing the second level. For example, 31.73% of people who choose to drink coffee at home also choose to drink it in their office. Overall, the heatmap shows that most people tend to drink coffee in a fixed area rather than on the way.
 
 ### Cups per day
 
@@ -250,6 +252,8 @@ survey_tidy |>
          barmode = "stack")
 ```
 
+This plot shows the correlation between age and cups of coffee drink per day. The general trend is that, the older the person is, the more coffee they drink every day.
+
 ### Favorite Coffee
 
 ```{r edu_vs_fav}
@@ -270,6 +274,7 @@ survey_tidy |>
          barmode = "stack")
 ```
 
+This plot of relationship between education level and favorite type of coffee interestingly demonstrates that the higher a person’s degree is, the more they tend to like pour-over coffee, while latte is the most broadly enjoyed by people with less than a high school diploma, suggesting the effect of information barrier. 
 
 ### Total Spend
 
@@ -290,6 +295,8 @@ survey_tidy %>%
                        y = -0.3,
                        title = list(text = "<b>Education Level</b>")))
 ```
+
+This line plot displays the changes of people’s total spend amount of money on coffee while also showing its relationship with their education level. From the plot, we can see that most people with lower education level tend to spend 20$ to 40$ on coffee per month, but people with higher degrees can tolerate higher expenditures on coffee.
 
 ### Caffeine & Expertise
 
@@ -314,6 +321,7 @@ survey_tidy %>%
                        title = list(text = "<b>Preferred Caffeine</b>")))
 ```
 
+This plot shows that, although most people choose to have their coffees with full caffeine in this survey, this choice is especially evident for those who consider themselves as experts.
 
 ### Most willing to pay & Most paid
 
@@ -336,7 +344,11 @@ survey_tidy %>%
     yaxis = list(title = "Most Willing to Pay (per cup)"))
 ```
 
+This heatmap demonstrates that although most people actually pay what they say they are willing to pay for a cup of coffee, there are also people who would pay much higher than they are currently paying for coffee of better quality. 
+
 ## Coffee Ratings
+
+In this part of the survey, the researchers offered participants with 4 different kinds of coffee—A, B, C, and , D, and asked them to rate each coffee by their sweetness, bitterness, and their overall preference.
 
 ### Overall Preference
 
@@ -363,6 +375,8 @@ survey_tidy %>%
   )
 ```
 
+This pie chart shows that, out of the four kinds of coffee, most people choose coffee D as their favorite.
+
 ```{r expertise_prefer}
 survey_tidy %>% 
   distinct(submission_id, prefer_overall, expertise) %>% 
@@ -381,6 +395,8 @@ survey_tidy %>%
                        traceorder = "normal"),
          barmode = "stack")
 ```
+
+Notably, the more expert people consider themselves to be, the more they like coffee A and D, suggesting something different between these 2 kinds of coffee and coffee B & C.
 
 ### Preference Ratings
 
@@ -401,6 +417,7 @@ survey_tidy %>%
     fill = "Coffee Name")
 ```
 
+The respective distributions of ratings for the 4 types of coffee reveals that, while coffee A, B, and C have a normal distribution, meaning that most people rate them as mediocre or somewhat better than mediocre, coffee D receives a more extreme rating. Participants either like coffee D very much or do not like it at all. 
 
 ### Flavor Ratings
 
@@ -450,5 +467,5 @@ subplot(plot_acidity, plot_bitterness, nrows = 2, margin = 0.07) %>%
   ))
 ```
 
-
+The boxplots shows that, in general, coffee B and C are rated as more bitter than coffee A and D, while coffee A and D are rated as more acidic than coffee B and C.
 
