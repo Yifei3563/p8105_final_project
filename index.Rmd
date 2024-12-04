@@ -11,7 +11,33 @@ output:
 
 ![](images/home_picture.png)
 
-# Team Members
+### Website Overview
+
+There are two datasets in our project analysis. One is from the [Coffee Quality Institute](https://database.coffeeinstitute.org/) to rate coffee based on their acidity, sweetness, aroma, altitude, and region, offering an objective ratings about coffee. The other one is from the ["Great American Coffee Taste Test"](https://www.youtube.com/watch?v=bMOOQfeloH0), which examines consumer preferences. 
+
+In the Exploratory Analysis tab, you will find:
+
+ * The [trends and distributions](data_exploration_ratings.html)of objective coffee ratings by year, species, varieties, processing methods, altitude, and country of origins
+ 
+ * The [coffee-related lifestyle topics](data_exploration_survey.html), such as brewing methods, reasons for drinking coffee, daily consumption habits, favorite coffee types, spending patterns, caffeine knowledge, and pricing preferences
+ 
+In the Statistical Analysis tab, you will find:
+
+ * The [lasso model](analysis_ratings.html) for the objective coffee ratings about what factors truly affecting the coffee scores
+ 
+ * and [multiple linear regression model](analysis_survey.html) ..........
+ 
+
+The [Shiny tab](shiny.html) will help you explore and identify your preferred coffee processing methods.
+
+The [Report tab](report.html) provides a comprehensive overview of our analytical procedure, outlining each step in detail, and also a discussion about our findings combining the two datasets together.
+
+### Screencast
+
+Click on the video below for a brief walk through of the website.
+
+
+### Team Members
 
 * Jinghan Zhao - jz3902
 * Leyang Rui - lr3257
