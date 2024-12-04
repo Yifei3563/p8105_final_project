@@ -105,8 +105,12 @@ survey_tidy =
 survey_model = survey_tidy |>
   distinct(submission_id, .keep_all = TRUE) |>
   select(expertise, age, favorite, style, strength, roast_level,
-       caffeine, gender, education_level, bitterness, acidity, prefer_overall) |>
+       caffeine, gender, education_level) |>
   na.omit() |>
+  filter(
+    gender %in% c("Male", "Female", "Non-binary"),
+    age != "<18 years old"
+  ) |>
   slice_sample(n = 1000)
 
 x = model.matrix(expertise ~ ., data = survey_model)[, -1]
