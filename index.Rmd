@@ -11,4 +11,10 @@ output:
 
 ![](images/home_picture.png)
 
+# Team Members
+
+* Jinghan Zhao - jz3902
+* Leyang Rui - lr3257
+* Yifei Yu - yy3563
+* Yuechu Hu - yh3822
 

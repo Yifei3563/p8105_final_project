@@ -164,7 +164,7 @@ contingency_table = xtabs(expertise ~ age + style + strength + roast_level +
 print(contingency_table)
 
 stepwise_model = step(loglm(expertise ~ (age + style + strength + roast_level + 
-                                           caffeine + gender + prefer_overall)^2, 
+                                           caffeine + gender)^2, 
                             data = contingency_table))
 
 detach("package:MASS", unload = TRUE)
