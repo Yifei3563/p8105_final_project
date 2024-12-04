@@ -105,19 +105,7 @@ lambda_opt = lasso_cv[["lambda.min"]]
 Generating a sequence of lambda values to create a range of lambda values on a logarithmic scale to ensure our proper exploration of the regularization strength.
 
 
-```{r}
-lasso_fit |> 
-  broom::tidy() |> 
-  select(term, lambda, estimate) |> 
-  complete(term, lambda, fill = list(estimate = 0) ) |> 
-  filter(term != "(Intercept)") |> 
-  ggplot(aes(x = lambda, y = estimate, group = term, color = term)) + 
-  geom_path() + 
-  geom_vline(xintercept = lambda_opt, color = "blue", linewidth = 1.2) +
-  theme(legend.position = "none")
-```
 
-As lambda increases, the coefficients shrink toward zero.
 
 ```{r}
 lasso_cv |> 
@@ -148,3 +136,22 @@ All predictors (`aroma`, `flavor`, `aftertaste`, `acidity`, `body`, `balance`, `
 The deviance ratio is 0.923, suggesting that the model explains a significant portion of the variability in `total_cup_points.`
 
 
+
+## ANOVA
+
+
+```{r}
+ratings_no_outliers = ratings_no_outliers |>
+  drop_na(processing_method)
+
+anova_method = aov(total_cup_points ~ processing_method, data = ratings_no_outliers)
+summary(anova_method)
+```
+
+## T Test
+
+
+```{r}
+pairwise.t.test(ratings_no_outliers$total_cup_points, ratings_no_outliers$processing_method, 
+                                    p.adjust.method = "bonferroni")
+```
