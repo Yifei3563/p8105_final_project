@@ -289,6 +289,7 @@ This comparison evaluates how different processing methods impact total cup poin
 ```{r}
 top_origins_yearly = 
   ratings_df |> 
+  drop_na(variety) |> 
   group_by(grading_year) |> 
   arrange(grading_year, desc(total_cup_points)) |> 
   slice(1)
@@ -303,8 +304,15 @@ top_origins_yearly |>
   )
 ```
 
-We are curious about the top coffee origins and want to see if there exists regional strengths or cultivation efforts. Therefore we make a table showing that top-performing coffees come from a diverse set of countries, with no single country dominating year after year. Ethiopia appears twice, with exceptionally high scores in 2015.
+We are curious about the top coffee origins and want to see if there exists regional strengths or cultivation efforts. Therefore we make a table showing that top-performing coffees come from a diverse set of countries, with no single country dominating year after year. Ethiopia appears twice, with exceptionally high scores in 2015. 
 
 
 ## Discussion
+
+
+## Limitations
+
+Since Arabica coffee account for a large proportion of species in our dataset, we cannot tell the objective difference in coffee performance between the two coffee species. The data for a species with a uniform distribution will provide more information for the relevant analysis.
+
+
 

@@ -289,6 +289,7 @@ This plot shows the distribution between the mean altitude of the coffee beans a
 ```{r}
 top_origins_yearly = 
   ratings_df |> 
+  drop_na(variety) |> 
   group_by(grading_year) |> 
   arrange(grading_year, desc(total_cup_points)) |> 
   slice(1)
