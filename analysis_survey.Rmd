@@ -139,7 +139,7 @@ lasso_fit_best |>
 
 ```{r, results='hide'}
 full_mlr = lm(expertise ~ age + favorite + style + strength + roast_level +
-       caffeine + gender + education_level + acidity + bitterness, data = survey_model)
+       caffeine + gender + education_leveldata = survey_model)
 
 step(full_mlr, direction = "backward")
 
@@ -160,7 +160,7 @@ plot(final_mlr, which = 5)
 ```{r, results='hide'}
 library("MASS")
 contingency_table = xtabs(expertise ~ age + style + strength + roast_level + 
-    caffeine + gender + prefer_overall, data = survey_model)
+    caffeine + gender, data = survey_model)
 print(contingency_table)
 
 stepwise_model = step(loglm(expertise ~ (age + style + strength + roast_level + 
