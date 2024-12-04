@@ -1,5 +1,5 @@
 ---
-title: "Analysis"
+title: "Statistical Analysis"
 output: 
   html_document:
     toc: true
@@ -132,12 +132,13 @@ lasso_fit_best =
 
 lasso_fit_best |>
   broom::tidy() |>
-  print(n = 50)
+  select(term, estimate, lambda) |>
+  knitr::kable(digits = 4)
 ```
 
 ### Multiple Linear Regression
 
-```{r, results='hide'}
+```{r, results = 'hide'}
 full_mlr = lm(expertise ~ age + favorite + style + strength + roast_level +
        caffeine + gender + education_level, data = survey_model)
 
@@ -148,7 +149,9 @@ final_mlr = lm(expertise ~ age + style + strength + roast_level +
 ```
 
 ```{r}
-summary(final_mlr)
+final_mlr |>
+  broom::tidy() |>
+  knitr::kable(digits = 3)
 
 plot(final_mlr, which = 1)
 plot(final_mlr, which = 2)
