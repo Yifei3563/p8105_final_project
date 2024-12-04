@@ -8,25 +8,248 @@ runtime: shiny
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+library(flexdashboard)
+library(tidyverse)
+library(plotly)
+library(glmnet)
+library(modelr)
+set.seed(1)
+
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%",
+  warning = FALSE,
+  eval = FALSE
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r import_data, include=FALSE}
+survey = read_csv("data/coffee_survey.csv") |>
+  janitor::clean_names() |>
+  select(-purchase_other, -favorite_specify, -additions_other, -prefer_abc,  
+         -why_drink_other, -know_source, -value_cafe, -value_equipment, -gender_specify, 
+         -ethnicity_race_specify, -number_children, -political_affiliation, 
+         -coffee_a_notes, -coffee_b_notes, -coffee_c_notes, -coffee_d_notes) |>
+  drop_na(gender) |>
+  mutate_if(is.character, as.factor)
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r tidy_data, include=FALSE}
+survey_tidy = 
+  survey %>% 
+  rename_with(
+    ~ sub("personal_preference", "preference", .),
+    .cols = ends_with("personal_preference")
+  ) %>% 
+  pivot_longer(
+    cols = coffee_a_bitterness:coffee_d_preference,
+    values_to = "score",
+    names_to = c("coffee_name", "coffee_feature"),
+    names_pattern = "(.*)_(.*)"
+  ) %>% 
+  pivot_wider(
+    names_from = coffee_feature,
+    values_from = score
+  ) %>% 
+  mutate(
+    coffee_name = case_match(coffee_name,
+                             "coffee_a" ~ "Coffee A",
+                             "coffee_b" ~ "Coffee B",
+                             "coffee_c" ~ "Coffee C",
+                             "coffee_d" ~ "Coffee D"),
+    coffee_name = as.factor(coffee_name)
+  ) %>% 
+  mutate(
+    age = factor(age, levels = rev(c("<18 years old", "18-24 years old", "25-34 years old", 
+                                "35-44 years old", "45-54 years old", "55-64 years old", 
+                                ">65 years old"))),
+    cups = factor(cups, levels = rev(c("More than 4", "4", "3", "2", "1", "Less than 1"))),
+    education_level = factor(education_level, 
+                             levels = c("Doctorate or professional degree", "Master's degree",
+                                        "Bachelor's degree", "Some college or associate's degree",
+                                        "High school graduate", "Less than high school")),
+    favorite = fct_recode(favorite, "Blended drink" = "Blended drink (e.g. Frappuccino)"),
+    most_paid = factor(most_paid, levels = c("Less than $2", "$2-$4", "$4-$6", "$6-$8", 
+                                             "$8-$10", "$10-$15", "$15-$20", "More than $20")),
+    most_willing = factor(most_willing, levels = c("Less than $2", "$2-$4", "$4-$6", "$6-$8", 
+                                             "$8-$10", "$10-$15", "$15-$20", "More than $20")),
+    total_spend = factor(total_spend, levels = c("<$20", "$20-$40", "$40-$60", "$60-$80", "$80-$100",
+                                                 ">$100")),
+    caffeine = factor(caffeine, levels = c("Decaf", "Half caff", "Full caffeine")),
+    expertise = as.numeric(expertise),
+    bitterness = as.numeric(bitterness),
+    acidity = as.numeric(acidity),
+    preference = as.numeric(preference)
+  ) %>% 
+  relocate(prefer_ad, prefer_overall, .after = everything())
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r coffee_ad_logistic}
+coffee_ad_df = 
+  survey_tidy %>% 
+  distinct(submission_id, prefer_ad, gender, age, expertise, style, strength, caffeine) %>%
+  filter(
+    gender %in% c("Male", "Female", "Non-binary"),
+    age != "<18 years old"
+  ) %>% 
+  mutate(prefer_ad = if_else(prefer_ad == "Coffee D", 1, 0))
+
+bootstraps_ad = 
+  coffee_ad_df %>% 
+  bootstrap(100) %>% 
+  mutate(
+    strap = map(strap, as_tibble),
+    models = map(strap, \(df) glm(prefer_ad ~ gender + age + expertise + style + 
+                                    strength + caffeine, data = df, family = "binomial")),
+    results = map(models, broom::tidy)
+  ) %>% 
+  select(.id, results) %>% 
+  unnest(results)
+
+ad_results = 
+  bootstraps_ad %>% 
+  group_by(term) %>% 
+  summarize(
+    boot_mean = mean(estimate),
+    boot_se = sd(estimate)
+  ) 
+```
+
+```{r coffee_ad_predict}
+# Prepare coefficients
+intercept = 
+  ad_results %>% 
+  filter(term == "(Intercept)") %>% 
+  pull(boot_mean)
+
+coefs =
+  ad_results %>% 
+  filter(term != "(Intercept)") %>%
+  select(term, boot_mean) %>%
+  deframe()  # Converts to named vector
+
+new_data = 
+  coffee_ad_df %>% 
+  filter(submission_id == "WApbYk") %>% 
+  select(-submission_id, -prefer_ad) %>% 
+  model.matrix(~ . - 1, data = .) %>% 
+  as_tibble()
+
+# Compute logit (linear predictor)
+logit = intercept + sum(coefs * new_data)
+
+# Convert logit to probability
+predicted_prob <- 1 / (1 + exp(-logit))
+predicted_prob
+```
+
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+
+```{r}
+gender_choices = 
+  coffee_ad_df %>% 
+  distinct(gender) %>% 
+  pull(gender)
+
+ui = 
+  
+  fluidPage(
+  
+  selectInput(
+  inputId = "gender_choice",
+  label = h3("Select Gender"),
+  choices = gender_choices,
+  selected = "Female"
+  ),
+  
+  sliderInput(
+  inputId = "expertise_slider",
+  label = h3("Rate Your Coffee Expertise"),
+  min = 0, 
+  max = 10, 
+  value = 5
+  ),
+  
+  actionButton("submit", "Submit"),
+  
+  verbatimTextOutput("predicted_prob")
+  
+)
+```
+
+
+
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Chart A
+
+```{r}
+server = function(input, output) {
+  
+  values = reactiveValues(predicted_prob = NULL)
+  
+  
+  observeEvent(input[["submit"]], {
+    user_input = 
+      tibble(
+        gender = factor(input[["gender_choice"]], levels = unique(coffee_ad_df$gender)),
+        expertise = input[["expertise_slider"]]
+      ) %>% 
+      model.matrix(~ . - 1, data = .) %>% 
+      as_tibble()
+      
+    
+    logit = intercept + sum(user_input * coefs)
+    
+    values[["predicted_prob"]] = 1 / (1 + exp(-logit))
+    
+  })
+  
+  
+  
+  output[["predicted_prob"]] = renderPrint({
+    if (!is.null(values[["predicted_prob"]])) {
+      values[["predicted_prob"]]
+    } 
+    else {
+      "No predictions yet! Click Submit to calculate."
+    }
+  })
+  
+}
+
+# Run the app
+shinyApp(ui, server)
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Chart B
+
+```{r}
+
+```
+
+### Chart C
+
+```{r}
+
+```
+
