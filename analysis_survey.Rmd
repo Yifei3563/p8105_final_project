@@ -244,6 +244,7 @@ Next, we want to investigate what factors influence people's choice of Coffee A 
 coffee_ad_df = 
   survey_tidy %>% 
   distinct(submission_id, prefer_ad, gender, age, expertise, style, strength, caffeine) %>%
+  drop_na(gender, age, expertise, style, strength, caffeine) %>%
   filter(
     gender %in% c("Male", "Female", "Non-binary"),
     age != "<18 years old"
@@ -291,7 +292,6 @@ bootstraps_ad %>%
 
 
 ```{r coffee_ad_predict}
-# Prepare coefficients
 intercept = 
   ad_results %>% 
   filter(term == "(Intercept)") %>% 
@@ -301,7 +301,7 @@ coefs =
   ad_results %>% 
   filter(term != "(Intercept)") %>%
   select(term, boot_mean) %>%
-  deframe()  # Converts to named vector
+  deframe() 
 
 new_data = 
   coffee_ad_df %>% 
@@ -310,11 +310,11 @@ new_data =
   model.matrix(~ . - 1, data = .) %>% 
   as_tibble()
 
-# Compute logit (linear predictor)
+
 logit = intercept + sum(coefs * new_data)
 
-# Convert logit to probability
-predicted_prob <- 1 / (1 + exp(-logit))
+
+predicted_prob = 1 / (1 + exp(-logit))
 predicted_prob
 ```
 

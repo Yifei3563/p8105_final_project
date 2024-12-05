@@ -74,7 +74,8 @@ coffee_ad_df =
   distinct(submission_id, prefer_ad, gender, age, expertise, style, strength, caffeine) %>%
   drop_na(gender, age, expertise, style, strength, caffeine) %>% 
   filter(
-    gender %in% c("Male", "Female", "Non-binary")
+    gender %in% c("Male", "Female", "Non-binary"),
+    age != "<18 years old"
     ) %>% 
   mutate(prefer_ad = if_else(prefer_ad == "Coffee D", 1, 0))
 
@@ -123,7 +124,7 @@ gender_choice =
 age_choice = 
   coffee_ad_df %>% 
   distinct(age) %>% 
-  mutate(age = factor(age, levels = c("<18 years old", "18-24 years old", "25-34 years old", 
+  mutate(age = factor(age, levels = c("18-24 years old", "25-34 years old", 
                                           "35-44 years old", "45-54 years old", "55-64 years old", 
                                           ">65 years old"))) %>% 
   arrange(age) %>% 
@@ -159,14 +160,14 @@ ui =
     
     selectInput(
       inputId = "gender_choice",
-      label = h3("Select Gender"),
+      label = h4("Select Your Gender"),
       choices = gender_choice,
       selected = "Female"
     ),
     
     selectInput(
       inputId = "age_choice",
-      label = h3("Select Age"),
+      label = h4("Select Your Age"),
       choices = age_choice,
       selected = "18-24 years old"
     ),
@@ -194,7 +195,7 @@ ui =
     
     sliderInput(
       inputId = "expertise_slider",
-      label = h3("Rate Your Coffee Expertise"),
+      label = h4("Rate Your Coffee Expertise"),
       min = 0, 
       max = 10, 
       value = 5
@@ -219,21 +220,20 @@ server = function(input, output) {
       tibble(
         gender = factor(input[["gender_choice"]], levels = unique(coffee_ad_df$gender)),
         age = factor(input[["age_choice"]], levels = unique(coffee_ad_df$age)),
+        expertise = input[["expertise_slider"]],
         style = factor(input[["style_choice"]], levels = unique(coffee_ad_df$style)),
         strength = factor(input[["strength_choice"]], levels = unique(coffee_ad_df$strength)),
-        caffeine = factor(input[["caffeine_choice"]], levels = unique(coffee_ad_df$caffeine)),
-        expertise = input[["expertise_slider"]]
+        caffeine = factor(input[["caffeine_choice"]], levels = unique(coffee_ad_df$caffeine))
       ) %>% 
       model.matrix(~ . - 1, data = .) %>% 
       as_tibble()
     
     
-    logit = intercept + sum(user_input * coefs)
+    logit = intercept + sum(coefs * user_input)
     
     values[["predicted_prob"]] = 1 / (1 + exp(-logit))
     
   })
-  
   
   
   output[["predicted_prob"]] = renderPrint({
