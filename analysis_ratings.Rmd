@@ -62,7 +62,7 @@ features <- c("aroma", "flavor", "aftertaste", "acidity", "body", "balance", "sw
 target <- "total_cup_points"
 ```
 
-We chose the variables associated with sensory scores, which are aroma, flavor, aftertaste, acidity, body, balance, and sweetness, as the predictor variables of the model, and the total cup points as the response variable.
+We choose the variables associated with sensory scores, which are aroma, flavor, aftertaste, acidity, body, balance, and sweetness, as the predictor variables of the model, and the total cup points as the response variable.
 
 
 
@@ -72,8 +72,7 @@ corrplot(corr_matrix, method = "number", type = "upper", tl.cex = 0.8)
 ```
 
 
-Before building the model, we performed the correlation test between these variables. We found a high correlation between almost all independent variables and the dependent variable, and although the correlation between sweetness and total cup points was the lowest, there was still some correlation. Since there were so many predictors, we would choose to build a lasso model.
-
+Before building the model, we perform the correlation test between these variables. There are high correlations between almost all independent variables and the dependent variable. Although the correlation between `sweetness` and `total_cup_points` is the lowest, there is still some correlation, so we will use all these predictors to build the model. Since there are so many predictors, we will choose to make a lasso model.
 
 ## Lasso Model
 
