@@ -1,41 +1,13 @@
----
-title: "Shiny Dashboard"
-output: 
-  flexdashboard::flex_dashboard:
-    orientation: columns
-    vertical_layout: fill
-runtime: shiny
----
-
-```{r setup, include=FALSE}
-library(flexdashboard)
+library(shiny)
 library(tidyverse)
 library(plotly)
 library(glmnet)
 library(modelr)
 set.seed(1)
 
-knitr::opts_chunk$set(
-  fig.width = 6,
-  fig.asp = .6,
-  out.width = "90%",
-  warning = FALSE,
-  eval = FALSE
-)
 
-theme_set(theme_minimal() + theme(legend.position = "bottom"))
-
-options(
-  ggplot2.continuous.colour = "viridis",
-  ggplot2.continuous.fill = "viridis"
-)
-
-scale_colour_discrete = scale_colour_viridis_d
-scale_fill_discrete = scale_fill_viridis_d
-```
-
-```{r import_data, include=FALSE}
-survey = read_csv("data/coffee_survey.csv") |>
+## Data Importing
+survey = read.csv("coffee_survey.csv") |>
   janitor::clean_names() |>
   select(-purchase_other, -favorite_specify, -additions_other, -prefer_abc,  
          -why_drink_other, -know_source, -value_cafe, -value_equipment, -gender_specify, 
@@ -43,10 +15,9 @@ survey = read_csv("data/coffee_survey.csv") |>
          -coffee_a_notes, -coffee_b_notes, -coffee_c_notes, -coffee_d_notes) |>
   drop_na(gender) |>
   mutate_if(is.character, as.factor)
-```
 
 
-```{r tidy_data, include=FALSE}
+## Data Cleaning
 survey_tidy = 
   survey %>% 
   rename_with(
@@ -73,8 +44,8 @@ survey_tidy =
   ) %>% 
   mutate(
     age = factor(age, levels = rev(c("<18 years old", "18-24 years old", "25-34 years old", 
-                                "35-44 years old", "45-54 years old", "55-64 years old", 
-                                ">65 years old"))),
+                                     "35-44 years old", "45-54 years old", "55-64 years old", 
+                                     ">65 years old"))),
     cups = factor(cups, levels = rev(c("More than 4", "4", "3", "2", "1", "Less than 1"))),
     education_level = factor(education_level, 
                              levels = c("Doctorate or professional degree", "Master's degree",
@@ -84,7 +55,7 @@ survey_tidy =
     most_paid = factor(most_paid, levels = c("Less than $2", "$2-$4", "$4-$6", "$6-$8", 
                                              "$8-$10", "$10-$15", "$15-$20", "More than $20")),
     most_willing = factor(most_willing, levels = c("Less than $2", "$2-$4", "$4-$6", "$6-$8", 
-                                             "$8-$10", "$10-$15", "$15-$20", "More than $20")),
+                                                   "$8-$10", "$10-$15", "$15-$20", "More than $20")),
     total_spend = factor(total_spend, levels = c("<$20", "$20-$40", "$40-$60", "$60-$80", "$80-$100",
                                                  ">$100")),
     caffeine = factor(caffeine, levels = c("Decaf", "Half caff", "Full caffeine")),
@@ -94,16 +65,17 @@ survey_tidy =
     preference = as.numeric(preference)
   ) %>% 
   relocate(prefer_ad, prefer_overall, .after = everything())
-```
 
-```{r coffee_ad_logistic}
+
+## Logistic Regression & Bootstrapping
+
 coffee_ad_df = 
   survey_tidy %>% 
   distinct(submission_id, prefer_ad, gender, age, expertise, style, strength, caffeine) %>%
+  drop_na(gender, age, expertise, style, strength, caffeine) %>% 
   filter(
-    gender %in% c("Male", "Female", "Non-binary"),
-    age != "<18 years old"
-  ) %>% 
+    gender %in% c("Male", "Female", "Non-binary")
+    ) %>% 
   mutate(prefer_ad = if_else(prefer_ad == "Coffee D", 1, 0))
 
 bootstraps_ad = 
@@ -125,10 +97,10 @@ ad_results =
     boot_mean = mean(estimate),
     boot_se = sd(estimate)
   ) 
-```
 
-```{r coffee_ad_predict}
-# Prepare coefficients
+
+## Prediction
+
 intercept = 
   ad_results %>% 
   filter(term == "(Intercept)") %>% 
@@ -138,68 +110,105 @@ coefs =
   ad_results %>% 
   filter(term != "(Intercept)") %>%
   select(term, boot_mean) %>%
-  deframe()  # Converts to named vector
-
-new_data = 
-  coffee_ad_df %>% 
-  filter(submission_id == "WApbYk") %>% 
-  select(-submission_id, -prefer_ad) %>% 
-  model.matrix(~ . - 1, data = .) %>% 
-  as_tibble()
-
-# Compute logit (linear predictor)
-logit = intercept + sum(coefs * new_data)
-
-# Convert logit to probability
-predicted_prob <- 1 / (1 + exp(-logit))
-predicted_prob
-```
+  deframe()  
 
 
-Column {.sidebar}
------------------------------------------------------------------------
+## UI
 
-```{r}
-gender_choices = 
+gender_choice = 
   coffee_ad_df %>% 
   distinct(gender) %>% 
   pull(gender)
 
+age_choice = 
+  coffee_ad_df %>% 
+  distinct(age) %>% 
+  mutate(age = factor(age, levels = c("<18 years old", "18-24 years old", "25-34 years old", 
+                                          "35-44 years old", "45-54 years old", "55-64 years old", 
+                                          ">65 years old"))) %>% 
+  arrange(age) %>% 
+  pull(age)
+
+style_choice = 
+  coffee_ad_df %>% 
+  distinct(style) %>% 
+  arrange(style) %>% 
+  pull(style)
+
+strength_choice = 
+  coffee_ad_df %>% 
+  distinct(strength) %>% 
+  mutate(strength = factor(strength, levels = c("Weak", "Somewhat light",
+                                      "Medium", "Somewhat strong",
+                                      "Very strong"))
+         ) %>% 
+  arrange(strength) %>% 
+  pull(strength)
+
+caffeine_choice = 
+  coffee_ad_df %>% 
+  distinct(caffeine) %>% 
+  pull(caffeine)
+
+
+
 ui = 
   
   fluidPage(
-  
-  selectInput(
-  inputId = "gender_choice",
-  label = h3("Select Gender"),
-  choices = gender_choices,
-  selected = "Female"
-  ),
-  
-  sliderInput(
-  inputId = "expertise_slider",
-  label = h3("Rate Your Coffee Expertise"),
-  min = 0, 
-  max = 10, 
-  value = 5
-  ),
-  
-  actionButton("submit", "Submit"),
-  
-  verbatimTextOutput("predicted_prob")
-  
-)
-```
+    
+    
+    selectInput(
+      inputId = "gender_choice",
+      label = h3("Select Gender"),
+      choices = gender_choice,
+      selected = "Female"
+    ),
+    
+    selectInput(
+      inputId = "age_choice",
+      label = h3("Select Age"),
+      choices = age_choice,
+      selected = "18-24 years old"
+    ),
+    
+    selectInput(
+      inputId = "style_choice",
+      label = h4("What kind of coffee do you like?"),
+      choices = style_choice,
+      selected = "Fruity"
+    ),
+    
+    selectInput(
+      inputId = "strength_choice",
+      label = h4("What strength of coffee do you prefer?"),
+      choices = strength_choice,
+      selected = "Medium"
+    ),
+    
+    radioButtons(
+      inputId = "caffeine_choice",
+      label = h4("How much caffeine do you like in your coffee?"),
+      choices = caffeine_choice,
+      selected = "Full caffeine"
+    ),
+    
+    sliderInput(
+      inputId = "expertise_slider",
+      label = h3("Rate Your Coffee Expertise"),
+      min = 0, 
+      max = 10, 
+      value = 5
+    ),
+    
+    actionButton("submit", "Submit"),
+    
+    verbatimTextOutput("predicted_prob")
+    
+  )
 
 
+## Server
 
-
-Column {data-width=650}
------------------------------------------------------------------------
-
-### Chart A
-
-```{r}
 server = function(input, output) {
   
   values = reactiveValues(predicted_prob = NULL)
@@ -209,11 +218,15 @@ server = function(input, output) {
     user_input = 
       tibble(
         gender = factor(input[["gender_choice"]], levels = unique(coffee_ad_df$gender)),
+        age = factor(input[["age_choice"]], levels = unique(coffee_ad_df$age)),
+        style = factor(input[["style_choice"]], levels = unique(coffee_ad_df$style)),
+        strength = factor(input[["strength_choice"]], levels = unique(coffee_ad_df$strength)),
+        caffeine = factor(input[["caffeine_choice"]], levels = unique(coffee_ad_df$caffeine)),
         expertise = input[["expertise_slider"]]
       ) %>% 
       model.matrix(~ . - 1, data = .) %>% 
       as_tibble()
-      
+    
     
     logit = intercept + sum(user_input * coefs)
     
@@ -234,22 +247,7 @@ server = function(input, output) {
   
 }
 
-# Run the app
+
 shinyApp(ui, server)
-```
 
-Column {data-width=350}
------------------------------------------------------------------------
-
-### Chart B
-
-```{r}
-
-```
-
-### Chart C
-
-```{r}
-
-```
 

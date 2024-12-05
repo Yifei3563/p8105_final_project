@@ -1,0 +1,12 @@
+name: shiny
+title: shiny
+username: lampfish226
+account: lampfish226
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 13524327
+bundleId: 9463404
+url: https://lampfish226.shinyapps.io/shiny/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE

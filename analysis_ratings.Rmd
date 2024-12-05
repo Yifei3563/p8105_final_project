@@ -9,13 +9,8 @@ output:
 ---
 ```{r setup, include=FALSE}
 library(tidyverse)
-library(ggplot2)
 library(modelr)
-library(haven)
 library(plotly)
-library(factoextra)
-library(readr)
-library(dplyr)
 library(forcats)
 library(corrplot)
 library(glmnet)
@@ -141,7 +136,7 @@ The deviance ratio is 0.923, suggesting that the model explains a significant po
 
 
 ```{r}
-ratings_no_outliers = ratings_no_outliers |>
+ratings_no_outliers = ratings_df |>
   drop_na(processing_method)
 
 anova_method = aov(total_cup_points ~ processing_method, data = ratings_no_outliers)

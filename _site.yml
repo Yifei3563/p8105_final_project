@@ -20,7 +20,7 @@ navbar:
     - text: "Report"
       href: report.html
     - text: "Shiny"
-      href: shiny.html
+      href: https://lampfish226.shinyapps.io/coffee_predict/
     - icon: fa-envelope fa-lg
       menu:
         - text: "Yuechu Hu"

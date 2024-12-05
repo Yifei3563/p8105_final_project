@@ -1,0 +1,12 @@
+name: coffee_predict
+title: coffee_predict
+username: lampfish226
+account: lampfish226
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 13526728
+bundleId: 9464510
+url: https://lampfish226.shinyapps.io/coffee_predict/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE

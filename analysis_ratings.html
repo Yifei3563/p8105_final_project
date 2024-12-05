@@ -364,7 +364,7 @@ div.tocify {
   <a href="report.html">Report</a>
 </li>
 <li>
-  <a href="shiny.html">Shiny</a>
+  <a href="https://lampfish226.shinyapps.io/coffee_predict/">Shiny</a>
 </li>
 <li class="dropdown">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -463,22 +463,11 @@ lambda_opt = lasso_cv[[&quot;lambda.min&quot;]]</code></pre>
 <p>Generating a sequence of lambda values to create a range of lambda
 values on a logarithmic scale to ensure our proper exploration of the
 regularization strength.</p>
-<pre class="r"><code>lasso_fit |&gt; 
-  broom::tidy() |&gt; 
-  select(term, lambda, estimate) |&gt; 
-  complete(term, lambda, fill = list(estimate = 0) ) |&gt; 
-  filter(term != &quot;(Intercept)&quot;) |&gt; 
-  ggplot(aes(x = lambda, y = estimate, group = term, color = term)) + 
-  geom_path() + 
-  geom_vline(xintercept = lambda_opt, color = &quot;blue&quot;, linewidth = 1.2) +
-  theme(legend.position = &quot;none&quot;)</code></pre>
-<p><img src="analysis_ratings_files/figure-html/unnamed-chunk-6-1.png" width="90%" /></p>
-<p>As lambda increases, the coefficients shrink toward zero.</p>
 <pre class="r"><code>lasso_cv |&gt; 
   broom::tidy() |&gt; 
   ggplot(aes(x = log(lambda, 10), y = estimate)) + 
   geom_point()</code></pre>
-<p><img src="analysis_ratings_files/figure-html/unnamed-chunk-7-1.png" width="90%" /></p>
+<p><img src="analysis_ratings_files/figure-html/unnamed-chunk-6-1.png" width="90%" /></p>
 <p>This plot visualizes the effect of different lambda values on the
 estimated coefficients.</p>
 <p>At smaller values of log(lambda, 10), the estimated coefficients are
@@ -573,6 +562,41 @@ influence on the total cup points compared to others variables.</p>
 <p>The deviance ratio is 0.923, suggesting that the model explains a
 significant portion of the variability in
 <code>total_cup_points.</code></p>
+</div>
+<div id="anova" class="section level2">
+<h2>ANOVA</h2>
+<pre class="r"><code>ratings_no_outliers = ratings_df |&gt;
+  drop_na(processing_method)
+
+anova_method = aov(total_cup_points ~ processing_method, data = ratings_no_outliers)
+summary(anova_method)</code></pre>
+<pre><code>##                     Df Sum Sq Mean Sq F value Pr(&gt;F)  
+## processing_method    4     58  14.468   1.978 0.0956 .
+## Residuals         1164   8514   7.314                 
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+</div>
+<div id="t-test" class="section level2">
+<h2>T Test</h2>
+<pre class="r"><code>pairwise.t.test(ratings_no_outliers$total_cup_points, ratings_no_outliers$processing_method, 
+                                    p.adjust.method = &quot;bonferroni&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  ratings_no_outliers$total_cup_points and ratings_no_outliers$processing_method 
+## 
+##                           Natural / Dry Other Pulped natural / honey
+## Other                     0.83          -     -                     
+## Pulped natural / honey    1.00          0.88  -                     
+## Semi-washed / Semi-pulped 1.00          0.35  1.00                  
+## Washed / Wet              1.00          1.00  1.00                  
+##                           Semi-washed / Semi-pulped
+## Other                     -                        
+## Pulped natural / honey    -                        
+## Semi-washed / Semi-pulped -                        
+## Washed / Wet              0.75                     
+## 
+## P value adjustment method: bonferroni</code></pre>
 </div>
 
 
