@@ -195,6 +195,47 @@ ratings_df = read_csv("data/coffee_ratings.csv") %>%
 ```
 
 
+
+```{r}
+Q1_tcup = quantile(ratings_df$total_cup_points, 0.25, na.rm = TRUE)
+Q3_tcup = quantile(ratings_df$total_cup_points, 0.75, na.rm = TRUE)
+IQR_tcup = Q3_tcup - Q1_tcup
+
+lower_bound_tcup = Q1_tcup - 1.5 * IQR_tcup
+upper_bound_tcup = Q3_tcup + 1.5 * IQR_tcup
+
+Q1_alt = quantile(ratings_df$altitude_mean_meters, 0.25, na.rm = TRUE)
+Q3_alt = quantile(ratings_df$altitude_mean_meters, 0.75, na.rm = TRUE)
+IQR_alt = Q3_alt - Q1_alt
+
+lower_bound_alt = Q1_alt - 1.5 * IQR_alt
+upper_bound_alt = Q3_alt + 1.5 * IQR_alt
+
+ratings_no_outliers = ratings_df %>%
+  filter(
+    total_cup_points >= lower_bound_tcup & total_cup_points <= upper_bound_tcup,
+    altitude_mean_meters >= lower_bound_alt & altitude_mean_meters <= upper_bound_alt
+  )
+```
+
+
+#### The Distribution of the Total Cup Points
+
+```{r}
+points_dis = ggplot(ratings_df, aes(x = total_cup_points)) +
+  geom_histogram(binwidth = 1, fill = "skyblue", color = "black") +
+  coord_cartesian(xlim = c(60, NA)) +
+  theme_minimal() +
+  labs(title = "Total Cup Points Distribution", x = "Total Cup Points", y = "Frequency")
+
+ggplotly(points_dis)
+```
+
+
+Firstly, we accumulate the frequency of the total cup points. The distribution of total cup points is bell-shaped and similar to the normal distribution. The most frequent total cup points is 83, and most coffee beans are in the 80 to 85 cup points range.
+
+
+
 #### Trend of Average Total Cup Points Over Years
 
 ```{r}
@@ -208,7 +249,37 @@ ratings_df |>
          yaxis = list(title = "Average Total Cup Points"))
 ```
 
+
 We examine trends over the 8-year time period to get insights into how coffee quality has fluctuated. The plot shows a non-linear trend of average cup points across eight years. The years 2010 and 2018 exhibited the highest average scores, while 2012 and 2017 saw significant dips. The variability in cup points across years indicates that coffee quality is not static and can fluctuate significantly, warranting a deeper investigation into contributing factors.
+
+
+#### The Distribution of Varieties by Species
+
+
+```{r}
+variety_dis = ratings_df %>%
+  filter(!is.na(variety)) %>%
+  ggplot(aes(x = fct_rev(fct_infreq(variety)))) +
+  geom_bar(fill = "skyblue") +
+  facet_grid(~ species, scales = "free_x") +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5, size = 8),
+    strip.text = element_text(size = 10)
+  ) +
+  labs(
+    title = "Frequency of Varieties by Species",
+    x = "Variety",
+    y = "Count"
+  )
+
+
+ggplotly(variety_dis)
+```
+
+
+Then, we distribute the species and variety composition of the sample coffee beans. Almost all coffee beans belong to the Arabica species, and among the Arabica, Caturra, Bourbon, and Typica are the most abundant, while Sumatra Lintong, Sulawesi, Pache Comun, and Moka Peaberry are the least.  
+
 
 #### Distribution of Total Cup Points by Species
 
@@ -228,6 +299,33 @@ ratings_df |>
 ```
 
 We removed outliers by using the interquartile range (IQR) method to identify and filter extreme values. After removing outliers, the boxplot shows a more compact and representative distribution for both Arabica and Robusta species. The general trends remain the same, with Arabica having a slightly higher median and a wider data range than Robusta.
+
+
+#### The Boxplot of Variety and Total Cup Points
+
+
+```{r}
+ratings_no_outliers |> 
+  mutate(variety = fct_reorder(variety, total_cup_points)) |> 
+  plot_ly(
+    y = ~total_cup_points, 
+    color = ~variety, 
+    type = "box", 
+    colors = "viridis"
+  ) %>%
+  layout(
+    yaxis = list(
+      title = "Total Cup Points",
+      range = c(50, NA) 
+    ),
+    xaxis = list(
+      title = "Variety"
+    ))
+```
+
+
+We also produce the boxplot of total cup points by varieties. Through this boxplot, we know that Sumatra Lintong and Sumatra tend to perform better than the others on the total cup points, while Pache Comun and Java perform the worst. It is worth mentioning that the IQR of the total cup points of Java is the largest, which means the total cup points of Java have high variability and are more spread out around the median.
+
 
 #### Proportion of Processing Methods
 
@@ -281,6 +379,61 @@ without_outliers |>
 
 This comparison evaluates how different processing methods impact total cup points. The Natural/Dry processing method tends to yield the highest median and total cup points, suggesting its potential for producing higher-quality coffee. The Pulped Natural/Honey and Semi-washed/Semi-pulped methods have narrower distributions, indicating less variability in cup points. The Washed/Wet method is also consistent, with a median similar to Semi-washed but a slightly broader spread. 
 
+
+
+#### The Distribution between Total Cup Points and Altitude by Variety
+
+
+
+```{r}
+altitude_model = lm(altitude_mean_meters ~ total_cup_points, data = ratings_no_outliers)
+
+x_vals = seq(min(ratings_no_outliers$total_cup_points, na.rm = TRUE), 
+              max(ratings_no_outliers$total_cup_points, na.rm = TRUE), length.out = 100)
+y_preds = predict(altitude_model, newdata = data.frame(total_cup_points = x_vals))
+```
+
+
+
+```{r, warning=FALSE, message=FALSE}
+ratings_no_outliers |>
+  filter(!is.na(total_cup_points) & !is.na(altitude_mean_meters)) |>
+  mutate(text_label = str_c("Total Cup Points: ", total_cup_points, 
+                       "\nMean Altitude(meters): ", altitude_mean_meters,
+                       "\nVariety: ", variety)) |>
+  plot_ly(x = ~total_cup_points,
+  y = ~altitude_mean_meters,
+  type = "scatter",
+  mode = "markers",
+  color = ~variety,
+  text = ~text_label,
+  alpha = 0.5
+) %>%
+  add_lines(
+    x = x_vals,
+    y = y_preds,
+    line = list(color = 'red'),
+    name = 'Trend Line',
+    showlegend = FALSE,
+    inherit = FALSE
+  ) %>%
+  layout(
+    title = "Total Cup Points vs. Mean Altitude (meters)",
+    xaxis = list(title = "Total Cup Points",
+      range = c(60, max(ratings_no_outliers$total_cup_points, na.rm = TRUE))),
+    yaxis = list(title = "Altitude Mean Meters")
+  )
+
+```
+
+
+
+This plot shows the distribution between the mean altitude of the coffee beans and the total cup points. Although there is no obvious trend if we only look at the scatter on the plot, we can see that there is a positive correlation between mean altitude and total cup points by looking at the increasing trend lines. As the altitude goes up, the total cup points of the coffee bean increases.
+
+
+
+
+
 #### Origins of Top Coffees Each Year
 
 ```{r}
@@ -308,6 +461,21 @@ We are curious about the top coffee origins and want to see if there exists regi
 ### Ratings Data
 
 #### Correlation Test
+
+
+```{r}
+features <- c("aroma", "flavor", "aftertaste", "acidity", "body", "balance", "sweetness")
+target <- "total_cup_points"
+```
+
+We choose the variables associated with the sensory, which are `aroma`, `flavor`, `aftertaste`, `acidity`, `body`, `balance`, and `sweetness`, as the predictor variables of the model, and the `total_cup_points` as the response variable.
+
+```{r}
+corr_matrix = cor(ratings_df[, c(features, target)], use = "complete.obs")
+corrplot(corr_matrix, method = "number", type = "upper", tl.cex = 0.8)
+```
+
+To check the effectiveness of the variables, if these variables affect the total cup points, we perform the correlation test between these variables before building the model. A larger coefficient indicates a stronger correlation. There are high correlations between almost all independent variables and the dependent variable. Although the correlation between `sweetness` and `total_cup_points` is the lowest, the correlation is not weak, so we will use all these predictors to build the model. Since there are so many predictors, we will choose to make a lasso model.
 
 #### Lasso Model
 
