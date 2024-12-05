@@ -303,6 +303,90 @@ top_origins_yearly |>
 
 We are curious about the top coffee origins and want to see if there exists regional strengths or cultivation efforts. Therefore we make a table showing that top-performing coffees come from a diverse set of countries, with no single country dominating year after year. Ethiopia appears twice, with exceptionally high scores in 2015. 
 
+## Statistical Analysis
+
+### Ratings Data
+
+#### Correlation Test
+
+#### Lasso Model
+
+```{r}
+x = as.matrix(ratings_df[, features])
+y = ratings_df |> pull(total_cup_points)
+```
+
+
+
+```{r}
+lambda = 10^(seq(-2, 2.75, 0.1))
+
+lasso_fit =
+  glmnet(x, y, lambda = lambda)
+
+lasso_cv =
+  cv.glmnet(x, y, lambda = lambda)
+
+lambda_opt = lasso_cv[["lambda.min"]]
+```
+
+Generating a sequence of lambda values to create a range of lambda values on a logarithmic scale to ensure our proper exploration of the regularization strength.
+
+
+
+
+```{r}
+lasso_cv |> 
+  broom::tidy() |> 
+  ggplot(aes(x = log(lambda, 10), y = estimate)) + 
+  geom_point()
+```
+
+This plot visualizes the effect of different lambda values on the estimated coefficients.
+
+At smaller values of log(lambda, 10), the estimated coefficients are smaller or close to zero.As log(lambda, 10) increases, the coefficients stabilize and converge toward specific values.
+
+```{r}
+lasso_fit = glmnet(x, y, lambda = lambda_opt)
+
+lasso_fit |> broom::tidy() |> 
+  knitr::kable()
+```
+
+The intercept value is 5.08, which represents the baseline predicted value of `total_cup_points` when all predictors are zero.
+
+All predictors (`aroma`, `flavor`, `aftertaste`, `acidity`, `body`, `balance`, `sweetness`) have non-zero coefficients, indicating they contribute to the model at the optimal lambda.
+
+`flavor` has the largest coefficient with the value of 1.97, suggesting that flavor is the most influential predictor in determining the total cup points.
+
+`body`(0.579) and `acidity`(0.895) have relatively the smallest coefficients, indicating that they have a weaker influence on the total cup points compared to others variables.
+
+The deviance ratio is 0.923, suggesting that the model explains a significant portion of the variability in `total_cup_points.`
+
+#### ANOVA
+
+```{r}
+ratings_no_outliers = ratings_df |>
+  drop_na(processing_method)
+
+anova_method = aov(total_cup_points ~ processing_method, data = ratings_no_outliers)
+summary(anova_method)
+```
+
+
+The results of the one-way ANOVA test, as displayed in the output, assess whether there is a significant difference in total cup points among different processing methods in the dataset. The F-statistic value is 1.978 with a p-value of 0.0956. Since the p-value is greater than the typical significance level of 0.05, we fail to reject the null hypothesis. This suggests that there is no statistically significant difference in the total cup points across the processing methods at the 5% significance level. 
+
+#### T Test
+
+
+```{r}
+pairwise.t.test(ratings_no_outliers$total_cup_points, ratings_no_outliers$processing_method, 
+                                    p.adjust.method = "bonferroni")
+```
+
+The results of the pairwise t-tests, adjusted using the Bonferroni method for multiple comparisons, reveal no statistically significant differences in total cup points between any pairs of processing methods. All adjusted p-values are greater than 0.05. This suggests that the mean total cup points are comparable across the different processing methods analyzed (e.g., Natural/Dry, Other, Pulped Natural/Honey, Semi-Washed/Semi-Pulped, and Washed/Wet). The lack of significant differences aligns with the earlier ANOVA results, indicating that the processing method does not have a substantial impact on total cup points when considering the current dataset.
+
+
 
 ## Discussion
 

@@ -141,7 +141,7 @@ lasso_fit_best |>
 
 The LASSO model chooses all the variables provided in the model, with age variable of the level 35-44 years old, caffeine variable of the level full caffeine, gender variable of the levels male and non-binary, and education variable of the levels master's degree, high school graduate, and less than high school. 
 
-Since the LASSO model's optimal lambda is very small (`r lambda_opt`), it suggests that the fitting progress will be very similar to that of fitting a multiple linear regression model, which is what we will will do below. 
+Since the LASSO model's optimal lambda is very small (`r lambda_opt`), it suggests that the fitting progress will be very similar to that of fitting a multiple linear regression model, which is what we will do below. 
 
 ### Multiple Linear Regression
 

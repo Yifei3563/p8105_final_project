@@ -143,6 +143,11 @@ anova_method = aov(total_cup_points ~ processing_method, data = ratings_no_outli
 summary(anova_method)
 ```
 
+
+The results of the one-way ANOVA test, as displayed in the output, assess whether there is a significant difference in total cup points among different processing methods in the dataset. The F-statistic value is 1.978 with a p-value of 0.0956. Since the p-value is greater than the typical significance level of 0.05, we fail to reject the null hypothesis. This suggests that there is no statistically significant difference in the total cup points across the processing methods at the 5% significance level. 
+
+
+
 ## T Test
 
 
@@ -150,3 +155,6 @@ summary(anova_method)
 pairwise.t.test(ratings_no_outliers$total_cup_points, ratings_no_outliers$processing_method, 
                                     p.adjust.method = "bonferroni")
 ```
+
+The results of the pairwise t-tests, adjusted using the Bonferroni method for multiple comparisons, reveal no statistically significant differences in total cup points between any pairs of processing methods. All adjusted p-values are greater than 0.05, with many being as high as 1.00. This suggests that the mean total cup points are comparable across the different processing methods analyzed (e.g., Natural/Dry, Other, Pulped Natural/Honey, Semi-Washed/Semi-Pulped, and Washed/Wet). The lack of significant differences aligns with the earlier ANOVA results, indicating that the processing method does not have a substantial impact on total cup points when considering the current dataset. The Bonferroni adjustment, which is conservative, further reinforces this finding by controlling for Type I error in multiple comparisons.
+
