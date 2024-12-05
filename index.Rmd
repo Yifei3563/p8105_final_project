@@ -25,9 +25,9 @@ In the Exploratory Analysis tab, you will find:
  
 In the Statistical Analysis tab, you will find:
 
- * The [lasso model](analysis_ratings.html) for the objective coffee ratings about what factors truly affecting the coffee scores
+ * The statistical analysis for the [objective coffee ratings](analysis_ratings.html) about what factors truly affecting the coffee scores and whether coffee processing methods make a big difference in ratings
  
- * and [multiple linear regression model](analysis_survey.html) ..........
+ * The statistical analysis for the [coffee-related lifestyle topics](analysis_survey.html), showing interesting demographic facts about coffee consumers and there preferences between two different coffee
  
 
 The [Shiny tab](shiny.html) will help you explore and identify your preferred coffee processing methods.

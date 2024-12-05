@@ -387,7 +387,6 @@ pairwise.t.test(ratings_no_outliers$total_cup_points, ratings_no_outliers$proces
 The results of the pairwise t-tests, adjusted using the Bonferroni method for multiple comparisons, reveal no statistically significant differences in total cup points between any pairs of processing methods. All adjusted p-values are greater than 0.05. This suggests that the mean total cup points are comparable across the different processing methods analyzed (e.g., Natural/Dry, Other, Pulped Natural/Honey, Semi-Washed/Semi-Pulped, and Washed/Wet). The lack of significant differences aligns with the earlier ANOVA results, indicating that the processing method does not have a substantial impact on total cup points when considering the current dataset.
 
 
-
 ## Discussion
 
 
