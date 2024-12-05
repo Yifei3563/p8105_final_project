@@ -1,13 +1,12 @@
 library(shiny)
 library(tidyverse)
-library(plotly)
 library(glmnet)
 library(modelr)
 set.seed(1)
 
 
 ## Data Importing
-survey = read.csv("coffee_survey.csv") |>
+survey = read_csv("coffee_survey.csv") |>
   janitor::clean_names() |>
   select(-purchase_other, -favorite_specify, -additions_other, -prefer_abc,  
          -why_drink_other, -know_source, -value_cafe, -value_equipment, -gender_specify, 
@@ -43,9 +42,6 @@ survey_tidy =
     coffee_name = as.factor(coffee_name)
   ) %>% 
   mutate(
-    age = factor(age, levels = rev(c("<18 years old", "18-24 years old", "25-34 years old", 
-                                     "35-44 years old", "45-54 years old", "55-64 years old", 
-                                     ">65 years old"))),
     cups = factor(cups, levels = rev(c("More than 4", "4", "3", "2", "1", "Less than 1"))),
     education_level = factor(education_level, 
                              levels = c("Doctorate or professional degree", "Master's degree",
@@ -77,7 +73,13 @@ coffee_ad_df =
     gender %in% c("Male", "Female", "Non-binary"),
     age != "<18 years old"
     ) %>% 
-  mutate(prefer_ad = if_else(prefer_ad == "Coffee D", 1, 0))
+  mutate(prefer_ad = if_else(prefer_ad == "Coffee D", 1, 0),
+         gender = relevel(gender, ref = "Female"),       
+         age = relevel(age, ref = "18-24 years old"),            
+         style = relevel(style, ref = "Fruity"),     
+         strength = relevel(strength, ref = "Medium"), 
+         caffeine = relevel(caffeine, ref = "Full caffeine")
+         )
 
 bootstraps_ad = 
   coffee_ad_df %>% 
@@ -111,7 +113,9 @@ coefs =
   ad_results %>% 
   filter(term != "(Intercept)") %>%
   select(term, boot_mean) %>%
-  deframe()  
+  mutate(term = factor(term)) %>% 
+  arrange(term) %>% 
+  deframe()   
 
 
 ## UI
@@ -157,7 +161,10 @@ ui =
   
   fluidPage(
     
+    titlePanel("Discover Your Cup: Washed or Natural Coffee?"),
     
+    sidebarPanel(
+      
     selectInput(
       inputId = "gender_choice",
       label = h4("Select Your Gender"),
@@ -170,6 +177,14 @@ ui =
       label = h4("Select Your Age"),
       choices = age_choice,
       selected = "18-24 years old"
+    ),
+    
+    sliderInput(
+      inputId = "expertise_slider",
+      label = h4("How would you rate your own coffee expertise?"),
+      min = 0, 
+      max = 10, 
+      value = 5
     ),
     
     selectInput(
@@ -193,19 +208,33 @@ ui =
       selected = "Full caffeine"
     ),
     
-    sliderInput(
-      inputId = "expertise_slider",
-      label = h4("Rate Your Coffee Expertise"),
-      min = 0, 
-      max = 10, 
-      value = 5
-    ),
     
-    actionButton("submit", "Submit"),
+    actionButton("submit", "Submit")
     
-    verbatimTextOutput("predicted_prob")
+  ),
     
-  )
+  mainPanel(
+    
+    
+    verbatimTextOutput("predicted_prob"),
+    
+    tags$style(HTML("
+    #explanation-box {
+      background-color: #f9f9f9; 
+      border: 1px solid #cccccc; 
+      border-radius: 8px; 
+      padding: 15px; 
+      color: #333333; 
+      font-family: Arial, sans-serif;
+      font-size: 16px;
+    }
+  ")),
+    
+    div(uiOutput("explanation"), id = "explanation-box"),
+    
+    imageOutput("processing")
+    
+  ))
 
 
 ## Server
@@ -225,25 +254,83 @@ server = function(input, output) {
         strength = factor(input[["strength_choice"]], levels = unique(coffee_ad_df$strength)),
         caffeine = factor(input[["caffeine_choice"]], levels = unique(coffee_ad_df$caffeine))
       ) %>% 
+      mutate(
+        gender = relevel(gender, ref = "Female"),       
+        age = relevel(age, ref = "18-24 years old"),            
+        style = relevel(style, ref = "Fruity"),     
+        strength = relevel(strength, ref = "Medium"), 
+        caffeine = relevel(caffeine, ref = "Full caffeine")     
+      ) %>%
       model.matrix(~ . - 1, data = .) %>% 
-      as_tibble()
+      as_tibble() %>% 
+      select(-genderFemale) %>% 
+      select(order(names(.)))
     
     
     logit = intercept + sum(coefs * user_input)
     
-    values[["predicted_prob"]] = 1 / (1 + exp(-logit))
+    values[["predicted_prob"]] = round(1 / (1 + exp(-logit)) * 100, digits = 2)
     
   })
   
+
   
   output[["predicted_prob"]] = renderPrint({
-    if (!is.null(values[["predicted_prob"]])) {
-      values[["predicted_prob"]]
+    if (is.null(values[["predicted_prob"]])) {
+      "No predictions yet! Click Submit to calculate."
     } 
     else {
-      "No predictions yet! Click Submit to calculate."
+      percentage = sprintf("%.2f%%", values[["predicted_prob"]]) 
+      paste0("The Probability of Preferring Natural Processed Coffee: ", percentage)
     }
   })
+  
+  output[["processing"]] = renderImage({
+    if (is.null(values[["predicted_prob"]])) {
+      list(src = "processing.jpg", width = "90%")
+    } 
+    else {
+      list(src = "methods_h.png", width = "100%")
+    }
+  }, deleteFile = FALSE)
+  
+  output[["explanation"]] = renderUI({
+    if (is.null(values[["predicted_prob"]])) {
+      HTML(
+      "<p>Coffee processing refers to the way that a seed is removed from a coffee cherry. <br>
+      There are four different methods to process coffee, and these methods affect the seed's flavor 
+      as it gets roasted and turned into a coffee bean—this flavor sticks around till the final brew. <br><br>
+      We are focusing on <b>washed process</b> (tastes lighter) and <b>natural process</b> (tastes 
+      deeper and complex) now. <br>
+      By submitting your information, we will predict which of the two you will prefer.</p>"
+      )
+    } 
+    else if (values[["predicted_prob"]] >= 50){
+      HTML(
+      "<p><b>You are more likely to love natural processed coffee!</b><br><br>
+      Natural coffees result in heavy bodied cups of coffee, with <b>deeper and complex tasting notes</b> 
+      due to that time spent developing extra flavors. <br><br>
+      Natural coffee may taste a little strange because it's highly fermented. It really comes down to 
+      personal preference, but surveys show that many people are crazy about its flavor. Based on your
+      coffee drinking habits, we think you'll love it too! <b>If you haven't tried natural coffee yet, then 
+      go for it!</b></p>"
+      )
+    }
+    else {
+      HTML(
+        "<p><b>You are more likely to love washed processed coffee!</b><br><br>
+        Washed processed coffees have <b>cleaner, more crisp tasting notes</b> than natural processed coffees. 
+        The body of a brewed washed coffee is lighter. There is typically more brightness as well, because 
+        of a cleaner acidity that balances out the sweetness of the coffee. <br><br>
+        Based on your coffee drinking habits, we predict that you will prefer washed coffee to natural 
+        coffee. Washed coffee is more widely accepted, while natural coffee may taste a little strange 
+        because it's highly fermented.<br>
+        However, it's always good to try new things. Surveys show that many people are crazy about the 
+        flavor of natural coffee. <b>Why not give it a try?</b></p>"
+      )
+    }
+  })
+  
   
 }
 

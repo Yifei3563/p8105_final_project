@@ -291,7 +291,7 @@ bootstraps_ad %>%
 
 The results of the logistic model and the bootstrapping process are in good accordance with the researchers' introduction about Coffee A and D. More specifically, people who like fruity and juicy style of coffee are more likely to like Coffee D, so do young people. This implies that, since Coffee D is a new type of coffee, young people who are still developing taste may accept its flavor more easily, while older people are more accustomed to "traditionally" good coffee. 
 
-```{r coffee_ad_predict}
+```{r coffee_ad_predict, eval=FALSE, echo=FALSE}
 intercept = 
   ad_results %>% 
   filter(term == "(Intercept)") %>% 

@@ -60,7 +60,7 @@ ratings_df = read_csv("data/coffee_ratings.csv") %>%
          color = as.factor(color))
 ```
 
-```{r}
+```{r, fig.width=6, fig.asp=.6, out.width="90%"}
 coffee_counts = ratings_df |>
   mutate(
     country_of_origin = tolower(country_of_origin),
