@@ -238,7 +238,7 @@ With the significant variables known, we want to see if the variables interact w
 
 ## Coffee A or Coffee D?
 
-Next, we want to investigate what factors influence people's choice of Coffee A or D. From the exploratory analysis part, we found that people who consider themselves to be expert like both coffee
+Next, we want to investigate what factors influence people's choice of Coffee A or D. From the exploratory analysis part, we found that most people who consider themselves to be expert select either Coffee A or D as their favorite. Nevertheless, what differentiate people, especially the experts, from choosing Coffee A and Coffee D? The researchers who construct this survey introduced Coffee D as an innovative type of coffee with a fruity and fermented flavor, while Coffee A is a more typical light roast coffee. Is this the true underlying reason for people's choices? We will try to answer this question by building a logistic model. 
 
 ```{r coffee_ad_logistic}
 coffee_ad_df = 
@@ -289,7 +289,7 @@ bootstraps_ad %>%
          yaxis = list(title = "Term"))
 ```
 
-
+The results of the logistic model and the bootstrapping process are in good accordance with the researchers' introduction about Coffee A and D. More specifically, people who like fruity and juicy style of coffee are more likely to like Coffee D, so do young people. This implies that, since Coffee D is a new type of coffee, young people who are still developing taste may accept its flavor more easily, while older people are more accustomed to "traditionally" good coffee. 
 
 ```{r coffee_ad_predict}
 intercept = 
@@ -318,8 +318,9 @@ predicted_prob = 1 / (1 + exp(-logit))
 predicted_prob
 ```
 
-
 ## Tests for Coffee Ratings
+
+In this part, we perform 3 ANOVA tests and following pairwise t-tests on the difference of bitterness, acidity, and overall preference among Coffee A, B, C, and D. 
 
 ```{r}
 survey_anova = survey_tidy |>
@@ -347,6 +348,8 @@ survey_anova |>
   knitr::kable(digits = 3)
 ```
 
+The results suggest that, people rated Coffee B and C as significantly more bitter than Coffee A and D.
+
 ### Acidity
 
 ```{r}
@@ -365,6 +368,8 @@ survey_anova |>
     mean_acidity = mean(acidity)) |>
   knitr::kable(digits = 3)
 ```
+
+The results suggest that, people rated Coffee A and D as significantly more acidic than Coffee B and C.
 
 ### Preference
 
@@ -385,6 +390,6 @@ survey_anova |>
   knitr::kable(digits = 3)
 ```
 
-
+The results suggest that, people like Coffee D significantly more than Coffee B and C, and the rating of Coffee A is very similar to that of Coffee D.
 
 
