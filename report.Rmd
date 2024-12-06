@@ -141,6 +141,8 @@ Some possible questions include:
 
 - The relationship between altitude and coffee characteristics.
 
+- What influence people's choice on favorite coffee?
+
 ## Data Cleaning
 
 ### Ratings Data
@@ -463,7 +465,7 @@ We are curious about the top coffee origins and want to see if there exists regi
 ```{r import_data}
 survey = read_csv("data/coffee_survey.csv") |>
   janitor::clean_names() |>
-  select(-purchase_other, -favorite_specify, -additions_other, -prefer_abc, -prefer_ad, 
+  select(-purchase_other, -favorite_specify, -additions_other, -prefer_abc,
          -why_drink_other, -know_source, -value_cafe, -value_equipment, -gender_specify, 
          -ethnicity_race_specify, -number_children, -political_affiliation, 
          -coffee_a_notes, -coffee_b_notes, -coffee_c_notes, -coffee_d_notes) |>
@@ -1007,6 +1009,17 @@ While people who rated themselves as coffee experts like both coffee A and coffe
 ## What makes people think they are experts?
 
 ```{r}
+survey_model = survey_tidy |>
+  distinct(submission_id, .keep_all = TRUE) |>
+  select(expertise, age, favorite, style, strength, roast_level,
+       caffeine, gender, education_level) |>
+  na.omit() |>
+  filter(
+    gender %in% c("Male", "Female", "Non-binary"),
+    age != "<18 years old"
+  ) |>
+  slice_sample(n = 1000)
+
 full_mlr = lm(expertise ~ age + favorite + style + strength + roast_level +
        caffeine + gender + education_level, data = survey_model)
 
