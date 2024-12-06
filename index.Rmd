@@ -85,7 +85,7 @@ plot_ly(
     thickness = 10)
 ) %>%
   layout(
-    title = "Coffee-Producing Countries",
+    title = "Coffee-Producing Countries (based on our dataset)",
     geo = list(
       projection = list(type = "natural earth")
     )

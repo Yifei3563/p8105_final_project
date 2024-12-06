@@ -5,7 +5,8 @@ output:
     toc: true
     toc_float: true
     code_folding: hide
-
+editor_options: 
+  chunk_output_type: console
 ---
 
 ## Motivation
@@ -146,7 +147,7 @@ Some possible questions include:
 
 For the ratings data, we first filtered out the variables needed for our project analysis then removed the unnecessary ones. We created a new column named `grading_year` by extracting the year as a four-digit number from the grading_date column using the `str_extract` function. This isolates the year, because we want to analyze the coffee ratings based on the year instead of focusing on a specific month and date. Additionally, the `species`, `variety`, and `processing_method` columns are converted into factors using the `as.factor` function. This step ensures that these variables are treated as categorical variables, making them suitable for our later statistical analysis. 
 
-
+For the surveys data, to make the analysis of the ratings for Coffee A, B, C, and D easier, we first used pivot long to turn coffee names, features, and respective scores into different variables. Then, we pivoted the dataset wider to make the features individual variables with the scores as their values. All categorical variables are mutated into factor variables, and we selected only useful variables for the analysis from the dataset. 
 
 ## Exploratory Analysis
 
@@ -160,6 +161,7 @@ library(plotly)
 library(forcats)
 library(corrplot)
 library(glmnet)
+library(leaps)
 
 knitr::opts_chunk$set(
   fig.width = 6,
@@ -456,6 +458,332 @@ top_origins_yearly |>
 
 We are curious about the top coffee origins and want to see if there exists regional strengths or cultivation efforts. Therefore we make a table showing that top-performing coffees come from a diverse set of countries, with no single country dominating year after year. Ethiopia appears twice, with exceptionally high scores in 2015. 
 
+## Survey Data
+
+```{r}
+survey_tidy = 
+  survey %>% 
+  rename_with(
+    ~ sub("personal_preference", "preference", .),
+    .cols = ends_with("personal_preference")
+  ) %>% 
+  pivot_longer(
+    cols = coffee_a_bitterness:coffee_d_preference,
+    values_to = "score",
+    names_to = c("coffee_name", "coffee_feature"),
+    names_pattern = "(.*)_(.*)"
+  ) %>% 
+  pivot_wider(
+    names_from = coffee_feature,
+    values_from = score
+  ) %>% 
+  mutate(
+    coffee_name = case_match(coffee_name,
+                             "coffee_a" ~ "Coffee A",
+                             "coffee_b" ~ "Coffee B",
+                             "coffee_c" ~ "Coffee C",
+                             "coffee_d" ~ "Coffee D"),
+    coffee_name = as.factor(coffee_name)
+  ) %>% 
+  mutate(
+    age = factor(age, levels = rev(c("<18 years old", "18-24 years old", "25-34 years old", 
+                                "35-44 years old", "45-54 years old", "55-64 years old", 
+                                ">65 years old"))),
+    cups = factor(cups, levels = rev(c("More than 4", "4", "3", "2", "1", "Less than 1"))),
+    education_level = factor(education_level, 
+                             levels = c("Doctorate or professional degree", "Master's degree",
+                                        "Bachelor's degree", "Some college or associate's degree",
+                                        "High school graduate", "Less than high school")),
+    favorite = fct_recode(favorite, "Blended drink" = "Blended drink (e.g. Frappuccino)"),
+    most_paid = factor(most_paid, levels = c("Less than $2", "$2-$4", "$4-$6", "$6-$8", 
+                                             "$8-$10", "$10-$15", "$15-$20", "More than $20")),
+    most_willing = factor(most_willing, levels = c("Less than $2", "$2-$4", "$4-$6", "$6-$8", 
+                                             "$8-$10", "$10-$15", "$15-$20", "More than $20")),
+    total_spend = factor(total_spend, levels = c("<$20", "$20-$40", "$40-$60", "$60-$80", "$80-$100",
+                                                 ">$100")),
+    caffeine = factor(caffeine, levels = c("Decaf", "Half caff", "Full caffeine"))
+  ) %>% 
+  relocate(prefer_overall, .after = everything())
+```
+
+### Distribution: Bar charts
+
+```{r}
+brew_df = 
+  survey_tidy %>% 
+  distinct(submission_id, brew) %>% 
+  drop_na(brew) %>% 
+  mutate(brew = str_split(brew, ", ")) %>% 
+  unnest(brew) %>% 
+  group_by(brew) %>% 
+  count() %>% 
+  ungroup() %>%
+  mutate(brew = str_replace(brew, "\\(.*", ""))
+
+brew_df %>% 
+  mutate(brew = fct_reorder(brew, n),
+         brew = fct_rev(brew)) %>% 
+  plot_ly(x = ~brew, y = ~n,
+          color = ~brew, name = ~brew, type = "bar", colors = "viridis") %>% 
+  layout(title = "How Do You Brew Coffee at Home?",
+         xaxis = list(title = "Methods"),
+         yaxis = list(title = "Count"),
+         showlegend = FALSE)
+
+why_drink_df = 
+  survey_tidy %>% 
+  distinct(submission_id, why_drink) %>% 
+  drop_na(why_drink) %>% 
+  mutate(why_drink = str_split(why_drink, ", ")) %>% 
+  unnest(why_drink) %>% 
+  group_by(why_drink) %>% 
+  count() %>% 
+  ungroup() %>% 
+  mutate(why_drink = case_match(why_drink, 
+                                "I need the caffeine" ~ "Caffeine",
+                                "I need the ritual" ~ "Ritual",
+                                "It makes me go to the bathroom" ~ "To poop",
+                                "It tastes good" ~ "Tastes good",
+                                "Other" ~ "Other"))
+
+why_drink_df %>% 
+  mutate(why_drink = fct_reorder(why_drink, n),
+         why_drink = fct_rev(why_drink)) %>% 
+  plot_ly(x = ~why_drink, y = ~n,
+          color = ~why_drink, name = ~why_drink, type = "bar", colors = "viridis") %>% 
+  layout(title = "Why Do You Drink Coffee?",
+         xaxis = list(title = "Reasons"),
+         yaxis = list(title = "Count"),
+         showlegend = FALSE)
+```
+
+To start with, we built two bar charts to evaluate the distribution of the variables "brew" and "why_drink". The resulting graphs show that the most commonly used brewing method in the survey is "pour over", and people drink coffee mostly for it "tastes good".
+
+### Co-occurence: Heatmaps
+
+```{r}
+survey_long =
+  survey_tidy %>% 
+  select(submission_id, where_drink) %>% 
+  distinct(submission_id, .keep_all = TRUE) %>% 
+  separate_rows(where_drink, sep = ", ") %>% 
+  mutate(where_drink = str_trim(where_drink))
+
+co_occurrence =
+  survey_long %>%
+  mutate(value = 1) %>%
+  pivot_wider(names_from = where_drink, values_from = value, values_fill = 0) %>%
+  select(-submission_id) %>%
+  as.matrix() %>%
+  as("sparseMatrix")  # Convert to sparse matrix for efficient operations
+
+co_matrix = t(co_occurrence) %*% co_occurrence  # Calculate the co-occurrence matrix
+
+total_submission = 
+  survey_tidy %>% 
+  select(submission_id, where_drink) %>% 
+  distinct(submission_id, .keep_all = TRUE) %>% 
+  count() %>% 
+  pull()
+
+co_matrix_percent = (co_matrix / total_submission) * 100 
+
+top_categories = 
+  co_matrix %>% 
+  rowSums() %>% 
+  order(decreasing = TRUE)
+
+co_matrix_dense_subset = 
+  co_matrix_percent[top_categories, top_categories] %>% 
+  as.matrix()
+
+co_occurrence_df = 
+  co_matrix_dense_subset %>% 
+  reshape2::melt() %>% 
+  rename(
+    Category1 = Var1,
+    Category2 = Var2,
+    Percentage = value
+  )
+
+co_occurrence_df %>% 
+  plot_ly(x = ~Category1, y = ~Category2, z = ~Percentage, 
+          type = "heatmap", colors = "Spectral") %>% 
+  add_annotations(
+    text = ~round(Percentage, 2), 
+    font = list(size = 14, color = "white"), 
+    showarrow = FALSE) %>% 
+  layout(
+    title = "Co-occurrence Heatmap: Where Do You Drink Coffee?",
+    xaxis = list(title = ""),
+    yaxis = list(title = ""))
+```
+
+To investigate questions that can select multiple answers, we built this co-occurrence heatmap. Based on its results, we found that most people in this survey chose to drink coffee at home, while a proportion of people who choose to drink coffee at home also drink it in their office and in the cafe. 
+
+## Correlation: Favorite coffee vs. education level
+
+```{r}
+survey_tidy |>
+  mutate(favorite = fct_rev(fct_infreq(favorite))) |>
+  distinct(submission_id, education_level, favorite) |>
+  group_by(education_level, favorite) |>
+  summarise(total_fav = n()) |>
+  mutate(prop_edu = total_fav/sum(total_fav)) |>
+  plot_ly(x = ~prop_edu * 100, y = ~education_level,
+          color = ~favorite, name = ~favorite, type = "bar", colors = "viridis") |>
+  layout(title = "Favorite Type of Coffee Across Education Level",
+         xaxis = list(title = "Percentage (%)"),
+         yaxis = list(title = "Education Level"),
+         legend = list(orientation = "h", 
+                       y = -0.3,
+                       title = list(text = "<b>Favorite Type of Coffee</b>")),
+         barmode = "stack")
+```
+
+This percentage bar plot reveals that, the more educated people are, the more they like pour-over coffee, and the less they like regular latte. 
+
+## Correlation: Total money spend on coffee and education level
+
+```{r}
+survey_tidy %>% 
+  drop_na(total_spend, education_level) %>% 
+  distinct(submission_id, total_spend, education_level) %>% 
+  group_by(total_spend, education_level) %>% 
+  summarize(count = n()) %>% 
+  ungroup() %>% 
+  plot_ly(x = ~total_spend, y = ~count,
+          color = ~education_level, name = ~education_level, 
+          type = "scatter", mode = "lines", colors = "viridis") %>% 
+  layout(title = "Total Spend on Coffee per month Across Education Level",
+         xaxis = list(title = "Total Spend on Coffee (per month)"),
+         yaxis = list(title = "Count"),
+         legend = list(orientation = "h", 
+                       y = -0.3,
+                       title = list(text = "<b>Education Level</b>")))
+```
+
+From the line chart above, we can know that the higher a degree people possess, the more they spend on coffee per month. 
+
+## Correlation: Most weilling to pay vs. most paid
+
+```{r}
+survey_tidy %>% 
+  drop_na(most_paid, most_willing) %>% 
+  distinct(submission_id, most_paid, most_willing) %>% 
+  group_by(most_paid, most_willing) %>% 
+  summarize(count = n()) %>% 
+  ungroup() %>% 
+  plot_ly(x = ~most_paid, y = ~most_willing, z = ~count, 
+          type = "heatmap", colors = "viridis") %>% 
+  add_annotations(
+    text = ~count, 
+    font = list(size = 14, color = "white"), 
+    showarrow = FALSE) %>% 
+  layout(
+    title = "Most Willing to Pay vs. Most Paid (per cup)",
+    xaxis = list(title = "Most Paid (per cup)"),
+    yaxis = list(title = "Most Willing to Pay (per cup)"))
+```
+
+This heatmap shows that, although most people pay what they say they would pay for coffee, some people would pay a lot more than what they are actually paying for a cup of coffee, suggesting potential space of improvement for current coffee market. 
+
+## Coffee ratings: Expertise vs. Preference
+
+```{r}
+survey_tidy %>% 
+  distinct(submission_id, prefer_overall, expertise) %>% 
+  group_by(expertise, prefer_overall) %>% 
+  summarize(total_exp = n()) %>%
+  mutate(prop = total_exp / sum(total_exp)) %>% 
+  plot_ly(x = ~expertise, y = ~(prop * 100),
+          color = ~prefer_overall, name = ~prefer_overall, 
+          type = "bar", colors = "viridis") %>% 
+  layout(title = "Overall Preference Across Self-rated Expertise",
+         xaxis = list(title = "Self-rated Coffee Expertise"),
+         yaxis = list(title = "Percentage (%)"),
+         legend = list(orientation = "h", 
+                       y = -0.3,
+                       title = list(text = "<b>Overall Preference</b>"),
+                       traceorder = "normal"),
+         barmode = "stack")
+```
+
+This percentage bar chart tells us that, the distribution of overall coffee pick is mostly even for people who do not consider themselves as coffee experts, while for those who consider themselves to be experts, coffee A and coffee D are the most popular, a very interesting trend that we will investigate further.
+
+## Distributions of Coffee ratings
+
+```{r}
+survey_tidy %>% 
+  select(submission_id, coffee_name, preference) %>% 
+  group_by(coffee_name, preference) %>% 
+  drop_na(preference) %>% 
+  count() %>% 
+  ggplot(aes(x = preference, y = n, fill = coffee_name)) +
+  geom_col(width = 1, alpha = 0.8, color = "white") +
+  geom_line(aes(group = 1), color = "black", size = 1, alpha = 0.8) +
+  facet_grid(. ~ coffee_name) +
+  labs(
+    title = "How Do You Rate Each Coffee",
+    x = "Preference Ratings",
+    y = "Count",
+    fill = "Coffee Name")
+```
+
+Moreover, the distributions of respective coffee ratings reveal that, people either like coffee D very much or do not like it at all, suggesting there must be something special about this coffee.
+
+## Distributions of Flavor and Coffee type
+
+```{r}
+plot_acidity = 
+  survey_tidy %>% 
+  select(coffee_name, acidity) %>% 
+  group_by(coffee_name) %>% 
+  plot_ly(y = ~acidity, 
+          color = ~coffee_name, 
+          type = "box", 
+          colors = "viridis",
+          showlegend = FALSE)
+
+plot_bitterness = 
+  survey_tidy %>% 
+  select(coffee_name, bitterness) %>% 
+  group_by(coffee_name) %>% 
+  plot_ly(y = ~bitterness, 
+          color = ~coffee_name, 
+          type = "box", 
+          colors = "viridis",
+          showlegend = FALSE)
+
+subplot(plot_acidity, plot_bitterness, nrows = 2, margin = 0.07) %>% 
+  layout(annotations = list(
+    list(
+      x = 0.5,  
+      y = 1.0,  
+      text = "Distribution of Acidity Ratings",  
+      xref = "paper",  
+      yref = "paper",  
+      xanchor = "center",  
+      yanchor = "bottom",  
+      showarrow = FALSE
+    ),
+    list(
+      x = 0.5,  
+      y = 0.45,  
+      text = "Distribution of Bitterness Ratings",  
+      xref = "paper",  
+      yref = "paper",  
+      xanchor = "center",  
+      yanchor = "bottom",  
+      showarrow = FALSE
+    )
+  ))
+```
+
+The boxplots imply the first potential difference between coffee A&D and coffee B&C: coffee A&D are more acidic while less bitter. 
+
+Therefore, we will continue to discover whether this difference is statistically significant, and what characteristics may influence people's choice on coffee A or D, while they are similar in some flavors. Also, since expertise is a self-rated measure here, we will also examine what factors are correlated with how people rate themselves to be coffee experts.  
+
 ## Statistical Analysis
 
 ### Ratings Data
@@ -554,6 +882,132 @@ pairwise.t.test(ratings_no_outliers$total_cup_points, ratings_no_outliers$proces
 
 The results of the pairwise t-tests, adjusted using the Bonferroni method for multiple comparisons, reveal no statistically significant differences in total cup points between any pairs of processing methods. All adjusted p-values are greater than 0.05. This suggests that the mean total cup points are comparable across the different processing methods analyzed (e.g., Natural/Dry, Other, Pulped Natural/Honey, Semi-Washed/Semi-Pulped, and Washed/Wet). The lack of significant differences aligns with the earlier ANOVA results, indicating that the processing method does not have a substantial impact on total cup points when considering the current dataset.
 
+## Survey Data
+
+### ANOVA test: biterness, acidity, preference
+
+```{r}
+survey_anova = survey_tidy |>
+  select(coffee_name, bitterness, acidity, preference) |>
+  na.omit() |>
+  slice_sample(n = 1000)
+
+anova_bitterness = aov(bitterness ~ coffee_name, data = survey_anova)
+
+summary(anova_bitterness)
+
+pairwise_bitterness = pairwise.t.test(survey_anova$bitterness, survey_anova$coffee_name, 
+                                    p.adjust.method = "bonferroni")
+
+print(pairwise_bitterness)
+
+survey_anova |>
+  group_by(coffee_name) |>
+  summarise(
+    mean_bitterness = mean(bitterness)) |>
+  knitr::kable(digits = 3)
+
+anova_acidity = aov(acidity ~ coffee_name, data = survey_anova)
+
+summary(anova_acidity)
+
+pairwise_acidity = pairwise.t.test(survey_anova$acidity, survey_anova$coffee_name, 
+                                    p.adjust.method = "bonferroni")
+
+print(pairwise_acidity)
+
+survey_anova |>
+  group_by(coffee_name) |>
+  summarise(
+    mean_acidity = mean(acidity)) |>
+  knitr::kable(digits = 3)
+
+anova_preference = aov(preference ~ coffee_name, data = survey_anova)
+
+summary(anova_preference)
+
+pairwise_preference = pairwise.t.test(survey_anova$preference, survey_anova$coffee_name, 
+                                    p.adjust.method = "bonferroni")
+
+print(pairwise_preference)
+
+survey_anova |>
+  group_by(coffee_name) |>
+  summarise(
+    mean_preference = mean(preference)) |>
+  knitr::kable(digits = 3)
+```
+
+The results of these 3 ANOVA tests and the following pairwise t-tests statistically support the distributions of the boxplots. That is, coffee A&D are significantly more acidic than coffee B&C, and coffee B&C are significantly more bitter than coffee A&D. What's more, the tests on people's overall preference tell that people also score coffee A&D significantly higher than coffee B&C.
+
+### Coffee A or D?
+
+```{r}
+coffee_ad_df = 
+  survey_tidy %>% 
+  distinct(submission_id, prefer_ad, gender, age, expertise, style, strength, caffeine) %>%
+  drop_na(gender, age, expertise, style, strength, caffeine) %>%
+  filter(
+    gender %in% c("Male", "Female", "Non-binary"),
+    age != "<18 years old"
+  ) %>% 
+  mutate(prefer_ad = if_else(prefer_ad == "Coffee D", 1, 0))
+
+bootstraps_ad = 
+  coffee_ad_df %>% 
+  bootstrap(100) %>% 
+  mutate(
+    strap = map(strap, as_tibble),
+    models = map(strap, \(df) glm(prefer_ad ~ gender + age + expertise + style + 
+                                    strength + caffeine, data = df, family = "binomial")),
+    results = map(models, broom::tidy)
+  ) %>% 
+  select(.id, results) %>% 
+  unnest(results)
+
+ad_results = 
+  bootstraps_ad %>% 
+  group_by(term) %>% 
+  summarize(
+    boot_mean = mean(estimate),
+    boot_se = sd(estimate)
+  ) 
+
+ad_results %>% 
+  knitr::kable(digits = 3)
+
+bootstraps_ad %>% 
+  mutate(term = fct_reorder(term, estimate)) %>% 
+  group_by(term) %>% 
+  plot_ly(x = ~estimate, 
+          color = ~term, 
+          type = "box", 
+          colors = "viridis",
+          showlegend = FALSE) %>% 
+  layout(title = "Distribution of terms",
+         xaxis = list(title = "Estimate"),
+         yaxis = list(title = "Term"))
+```
+
+While people who rated themselves as coffee experts like both coffee A and coffee D, what may differentiate them from choosing between these 2 coffees? From this logistic regression model, we found that people who like fruity coffee and were younger when taken the survey were more likely to choose coffee D over coffee A. This corresponds with the survey design that coffee D is a more innovative and fruity-mixed coffee. 
+
+## What makes people think they are experts?
+
+```{r}
+full_mlr = lm(expertise ~ age + favorite + style + strength + roast_level +
+       caffeine + gender + education_level, data = survey_model)
+
+step(full_mlr, direction = "backward")
+
+final_mlr = lm(expertise ~ age + style + strength + roast_level + 
+    caffeine + gender, data = survey_model)
+
+final_mlr |>
+  broom::tidy() |>
+  knitr::kable(digits = 3)
+```
+
+The multiple linear regression model filters style_bright, style_fruity, style_juicy, strong to somewhat strong strength, light and Nordic roast level, half-caffeine and full-caffeine, and gender_male as significant predictors of whether people consider themselves to be coffee experts. There are interesting overlaps with the previous logistic regression model, as people who like fruity and juicy styled coffee are also more likely to choose coffee D. 
 
 ## Discussion
 
@@ -577,6 +1031,10 @@ The results of the pairwise t-tests, adjusted using the Bonferroni method for mu
 * Since Arabica coffee account for a large proportion of species in our dataset, we cannot tell the objective difference in coffee performance between the two coffee species. The data for a species with a uniform distribution will provide more information for the relevant analysis.
 
 * The ratings data spans eight years, but it does not account for external variables like climate changes, global market dynamics, or agricultural practices that could influence coffee quality. These factors could have contributed to the observed fluctuations but were not explicitly analyzed.
+
+* The survey is only toward American citizens, so we do not know about people's opinions on coffee from different countries. As culture differs, people's preferences on coffee may also differ. This is one very interesting point that we cannot cover in our project but worth further discovering. 
+
+* The survey only asks two flavors for each coffee -- acidity and bitterness, but the professional rating scale has more factors like balance and aftertaste. Can people who are not coffee professionals also taste such differences and be influenced on how they choose their favorite coffee? Future surveys can include more options on the flavor of different coffees. 
 
 
 

@@ -14,7 +14,7 @@ library(modelr)
 library(glmnet)
 library(plotly)
 library(leaps)
-set.seed(1)
+set.seed(11)
 
 knitr::opts_chunk$set(
   fig.width = 6,
