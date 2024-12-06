@@ -81,7 +81,7 @@ ggplotly(points_dis)
 ```
 
 
-The distribution of total cup points is bell-shaped and similar to the normal distribution. The total cup points of 83 is the most frequent, and most coffee beans are in the 80 to 85 range.
+The distribution of total cup points is bell-shaped and similar to the normal distribution. The total cup points of 83 is the most frequent, and most of the total cup points of coffee beans are in the 80 to 85 range.
 
 
 
@@ -126,7 +126,7 @@ ggplotly(variety_dis)
 ```
 
 
-This plot shows the species and variety composition of the sample coffee beans. Almost all coffee beans are Arabica, and among the Arabica species, Caturra, Bourbon, and Typica are the most abundant.
+This plot shows the species and varieties composition of the sample coffee beans. Almost all coffee beans belong to Arabica, and among the Arabica species, varieties Caturra, Bourbon, and Typica are the most abundant.
 
 
 
@@ -153,7 +153,7 @@ ratings_no_outliers |>
 ```
 
 
-Through this boxplot, we can know that varieties Sumatra Lintong and Sumatra tend to performed better than the others on the total cup points, when Pache Comun and Java performed the worst. It is worth mentioning that, the IQR of the total cup points of Java is the largest, which means the cup points of Java have high variability and are more spread out around the median.
+Through this boxplot, we know that Sumatra Lintong and Sumatra tend to perform better than the others in terms of the total cup points, while Pache Comun and Java performed the worst. It is worth mentioning that Java's IQR of the total cup points is the largest, which means Java's total cup points have high variability and are more spread out around the median.
 
 
 
@@ -273,7 +273,7 @@ ratings_no_outliers |>
 ```
 
 
-This plot shows the distribution between the mean altitude of the coffee beans and the total cup points. Although there is no obvious trend if we only look at the scatter on the plot, we can see that there is a positive correlation between altitude and cup points by looking at the increasing trend lines. As the altitude goes up, the total cup points of the coffee bean increases.
+This plot shows the distribution between the mean altitude of the coffee beans and the total cup points. Although there is no obvious trend if we only look at the scatter on the plot, there is a positive correlation between mean altitude and total cup points according to the increasing trend line. As the mean altitude goes up, the total cup points of the coffee bean also increase.
 
 
 ### The Origins of Top Coffees Each Year from 2010 to 2018
