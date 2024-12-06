@@ -557,10 +557,28 @@ The results of the pairwise t-tests, adjusted using the Bonferroni method for mu
 
 ## Discussion
 
+* **Trend Over Years:** The trend of average total cup points across eight years reveals significant fluctuations, indicating variability in coffee quality over time. Peaks in 2010 and 2018 demonstrate years of higher overall quality, while dips, such as those in 2012 and 2017, suggest more analysis based on factors potentially affecting quality. These trends underscore the need for further investigation into external influences that impact yearly coffee quality, such as market selection, climate change, and agricultural practices.
+
+* **Species Comparison:** Arabica coffee consistently achieves a higher median and a narrower interquartile range compared to Robusta. This finding aligns with the general perception of Arabica as a higher-quality coffee species. In contrast, Robusta exhibits greater variability in quality, which may reflect diverse cultivation practices or broader market applications.
+
+* **Processing Methods:** The dominance of Washed/Wet processing, accounting for 60% of the dataset, reflects its widespread adoption in the coffee industry. However, the presence of other methods, such as Natural/Dry and Semi-Washed/Semi-Pulped, suggests regional or market-specific preferences. Interestingly, the boxplot comparison indicates that Natural/Dry processing yields the highest median cup points, suggesting its potential for producing high-quality coffee. The variability across methods suggests opportunities for further research into how processing techniques affect sensory attributes.
+
+* **Coffee Origins:** An examination of top coffees by year highlights diverse geographic contributions. The recurrence of Ethiopia suggests a possible regional influence and established reputation in the specialty coffee market. The diversity of origins underscores the global nature of high-quality coffee production and the importance of local growing conditions.
+
+* **Predictive Modeling:** The regression analysis identifies flavor as the most influential factor driving total cup points, followed by aftertaste and balance. These sensory attributes are critical in defining coffee quality and consumer preferences. The relatively smaller coefficients for body and acidity suggest they have less impact in this model but remain integral components of coffee evaluation.
+
+* **Statistical Testing:** The ANOVA and t-test results both reveal no statistically significant differences in total cup points across processing methods, suggesting that the method of processing alone does not substantially affect coffee quality. 
+
+
+
 
 ## Limitations
 
-Since Arabica coffee account for a large proportion of species in our dataset, we cannot tell the objective difference in coffee performance between the two coffee species. The data for a species with a uniform distribution will provide more information for the relevant analysis.
+* Since Arabica coffee account for a large proportion of species in our dataset, we cannot tell the objective difference in coffee performance between the two coffee species. The data for a species with a uniform distribution will provide more information for the relevant analysis.
+
+* The ratings data spans eight years, but it does not account for external variables like climate changes, global market dynamics, or agricultural practices that could influence coffee quality. These factors could have contributed to the observed fluctuations but were not explicitly analyzed.
+
+
 
 
 

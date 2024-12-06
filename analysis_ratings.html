@@ -356,7 +356,7 @@ div.tocify {
       <a href="analysis_survey.html">Survey Data</a>
     </li>
     <li>
-      <a href="general_analysis.html">General Analysis</a>
+      <a href="general_analysis.html">General Takeaways</a>
     </li>
   </ul>
 </li>
@@ -433,19 +433,21 @@ div.tocify {
 <h2>Correlation Test</h2>
 <pre class="r"><code>features &lt;- c(&quot;aroma&quot;, &quot;flavor&quot;, &quot;aftertaste&quot;, &quot;acidity&quot;, &quot;body&quot;, &quot;balance&quot;, &quot;sweetness&quot;)
 target &lt;- &quot;total_cup_points&quot;</code></pre>
-<p>We chose the variables associated with sensory scores, which are
+<p>We choose the variables associated with sensory scores, which are
 aroma, flavor, aftertaste, acidity, body, balance, and sweetness, as the
 predictor variables of the model, and the total cup points as the
 response variable.</p>
 <pre class="r"><code>corr_matrix = cor(ratings_df[, c(features, target)], use = &quot;complete.obs&quot;)
 corrplot(corr_matrix, method = &quot;number&quot;, type = &quot;upper&quot;, tl.cex = 0.8)</code></pre>
 <p><img src="analysis_ratings_files/figure-html/unnamed-chunk-3-1.png" width="90%" /></p>
-<p>Before building the model, we performed the correlation test between
-these variables. We found a high correlation between almost all
-independent variables and the dependent variable, and although the
-correlation between sweetness and total cup points was the lowest, there
-was still some correlation. Since there were so many predictors, we
-would choose to build a lasso model.</p>
+<p>Before building the model, we perform the correlation test between
+these variables. There are high correlations between almost all
+independent variables and the dependent variable. Although the
+correlation between <code>sweetness</code> and
+<code>total_cup_points</code> is the lowest, there is still some
+correlation, so we will use all these predictors to build the model.
+Since there are so many predictors, we will choose to make a lasso
+model.</p>
 </div>
 <div id="lasso-model" class="section level2">
 <h2>Lasso Model</h2>
