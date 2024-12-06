@@ -374,7 +374,7 @@ bootstraps_survey %>%
 
 Next, we did a bootstrap to show the distribution of slopes in the MLR for each predictor during model fitting. As the plot reveals, roast_level Nordic and gender_male the most positively correlate with self-perceived expertise, while a weak strength level and roast_level Italian the most negatively correlate with this response variable. 
 
-### Log linear model
+### Log Linear Model
 
 ```{r, results='hide'}
 library("MASS")
