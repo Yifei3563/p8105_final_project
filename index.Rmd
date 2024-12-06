@@ -31,7 +31,7 @@ In the Statistical Analysis tab, you will find:
  * A summary of [our analysis results](general_analysis.html)
  
 
-The [Shiny tab](shiny.html) will explore your preferred coffee processing methods based on your lifestyle.
+The [Shiny tab](https://lampfish226.shinyapps.io/coffee_predict/) will explore your preferred coffee processing methods based on your lifestyle.
 
 The [Report tab](report.html) provides a comprehensive overview of our analytical procedure, outlining each step in detail, and also a discussion about our findings combining the two datasets together.
 
