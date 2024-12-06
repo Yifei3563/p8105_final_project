@@ -15,7 +15,7 @@ navbar:
           href: analysis_ratings.html
         - text: "Survey Data"
           href: analysis_survey.html
-        - text: "General Analysis"
+        - text: "General Takeaways"
           href: general_analysis.html
     - text: "Report"
       href: report.html
