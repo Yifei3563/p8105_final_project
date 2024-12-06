@@ -28,7 +28,7 @@ In the Statistical Analysis tab, you will find:
  
  * The statistical analysis for the [consumer lifestyles and preferences](analysis_survey.html), showing interesting demographic facts about coffee consumers and their preferences between two different coffees
  
- * A summary of [our analysis results](general_analysis.html).
+ * A summary of [our analysis results](general_analysis.html)
  
 
 The [Shiny tab](shiny.html) will explore your preferred coffee processing methods based on your lifestyle.
