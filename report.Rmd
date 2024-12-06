@@ -169,7 +169,7 @@ Some possible questions include:
 
 - What are the countries with high coffee ratings in general?
 
-- The relationship between altitude and coffee characteristics.
+- What is the relationship between altitude and coffee characteristics?
 
 - What influence people's choice on favorite coffee?
 
@@ -941,7 +941,7 @@ survey_anova |>
   knitr::kable(digits = 3)
 ```
 
-The results of these 3 ANOVA tests (also confirmed in paired t-tests, see the [Statistical Analysis page](analysis_survey.html)) statistically support the distributions of the box plots in EDA. That is, according to the participants' evaluation, coffee A & D are significantly more acidic than coffee B & C, and coffee B & C are significantly more bitter than coffee A & D. What's more, the test on people's overall preference tells that people also rate coffee A & D significantly higher than coffee B & C.
+The results of these 3 ANOVA tests (also confirmed in paired t-tests) statistically support the distributions of the box plots in EDA. That is, according to the participants' evaluation, coffee A & D are significantly more acidic than coffee B & C, and coffee B & C are significantly more bitter than coffee A & D. What's more, the test on people's overall preference tells that people also rate coffee A & D significantly higher than coffee B & C.
 
 #### Coffee A or D?
 
@@ -1031,17 +1031,27 @@ The multiple linear regression model filters bright / fruity / juicy style, stro
 
 The trend in average total cup points across eight years reveals significant fluctuations in coffee quality, with notable peaks in 2010 and 2018 reflecting higher overall quality and dips in years such as 2012 and 2017. Most total cup points fall within the 80 to 85 range, and the majority of the sample coffee beans are Arabica, which consistently achieves a higher median and narrower interquartile range compared to Robusta. This aligns with Arabica’s reputation as a higher-quality species, whereas Robusta exhibits greater variability, possibly due to diverse cultivation practices and market applications. Additionally, there is a positive correlation between mean altitude and total cup points, with higher altitudes corresponding to higher-quality coffee beans, further highlighting the impact of environmental factors on quality. Processing methods emphasize the dominance of Washed/Wet processing, which accounts for 60% of the dataset, reflecting its widespread industry adoption, while Natural/Dry processing stands out with the highest median cup points, suggesting its potential for producing high-quality coffee and indicating regional or market-specific preferences. Lastly, coffee origins underscore the global nature of high-quality production, with Ethiopia’s prominence illustrating the influence of regional factors and its established reputation in the specialty coffee market, emphasizing the importance of local growing conditions, geographic diversity, and altitude.
 
+We also examined variations in coffee-related lifestyles across different demographic groups. For instance, older individuals tend to consume more coffee daily compared to younger people. Pour-over coffee is notably more popular among those with higher levels of education. While the majority of people spend between $20 and $60 per month on coffee, individuals with higher education levels are often willing to allocate a greater budget for their coffee consumption. Interestingly, although most people pay what they consider reasonable for a cup of coffee, some are willing to pay significantly more than their current expenditure. This highlights an opportunity for the coffee market: many consumers are open to investing in higher-priced, premium-quality coffee.
 
+Furthermore, people's self-assessment of their coffee expertise sheds light on broader consumer preferences. Those who perceive themselves as "professional" coffee enthusiasts tend to prefer less bitter and more acidic coffee, which challenges the common notion that “good coffee is bitter.” These self-identified professionals are also more inclined to embrace coffee with novel and unconventional flavors. These findings suggest that consumers are expanding their palate and exploring diverse coffee varieties, indicating a growing demand for innovation and flavor diversity in the coffee market.
 
-Our predictive modeling using regression analysis highlights flavor as the most influential factor driving total cup points, followed by aftertaste and balance, emphasizing the importance of these sensory attributes in defining coffee quality and consumer preferences. While body and acidity have relatively smaller coefficients, they remain integral components of coffee evaluation. After conducting statistical testing through ANOVA and t-tests, there is no statistically significant differences in total cup points across processing methods, indicating that the method of processing alone does not substantially affect coffee quality.
+Our predictive modeling using regression analysis highlights flavor as the most influential factor driving total cup points, followed by aftertaste and balance, emphasizing the importance of these sensory attributes in defining coffee quality. We further validated these findings from a consumer perspective using multiple linear regression and logistic regression. Results reveal that individuals’ preferred coffee styles significantly shape their self-assessment of coffee expertise and influence their choices among different coffee types. While body and acidity have relatively smaller coefficients, they remain integral components of coffee evaluation. 
 
+Statistical tests, including ANOVA and t-tests, indicate no statistically significant differences in total cup points across processing methods, suggesting that processing methods alone do not substantially impact coffee quality.
 
+However, since processing methods influence flavor profiles, they continue to shape consumer preferences. For example, washed-processed coffee often has a lighter, cleaner taste, while natural-processed coffee tends to be deeper and more complex. While the more conservative flavor of washed-processed coffee enjoys broad popularity, there is growing interest among younger consumers in natural-processed coffee, particularly for its novel, fruity, and bold flavors.
 
 
 
 ## Conclusion
 
+Our analysis of the ratings dataset reveals that variables such as flavor, aftertaste, balance, and sweetness play significant roles in how professionals evaluate the quality of coffee varieties. This highlights that professional coffee commentators prioritize comprehensive flavor profiles over simpler attributes like sweetness and acidity, placing greater emphasis on complex aspects such as aftertaste.
 
+The survey dataset analysis further supports these findings by showing that regular individuals who consider themselves coffee experts tend to prefer coffee that is less bitter and more acidic. These preferences are influenced by personal characteristics such as age and preferred coffee style. This alignment between professional ratings and civilian surveys suggests a shared appreciation among coffee enthusiasts for less bitter, more flavor-forward coffee.
+
+Additionally, our research uncovers a growing trend among younger consumers who are more likely to explore coffees with integrated, novel flavors, such as the fruity notes found in Coffee D. This reflects an expanding curiosity toward innovative and diverse coffee profiles.
+
+Contrary to the stereotype that coffee experts prefer bitter and robust drinks, our findings suggest the opposite: an appreciation for good coffee does not require a preference for bitterness. Ultimately, coffee enjoyment remains a deeply personal experience, driven by individual taste preferences.
 
 
 ## Limitations
