@@ -460,6 +460,19 @@ We are curious about the top coffee origins and want to see if there exists regi
 
 ## Survey Data
 
+```{r import_data}
+survey = read_csv("data/coffee_survey.csv") |>
+  janitor::clean_names() |>
+  select(-purchase_other, -favorite_specify, -additions_other, -prefer_abc, -prefer_ad, 
+         -why_drink_other, -know_source, -value_cafe, -value_equipment, -gender_specify, 
+         -ethnicity_race_specify, -number_children, -political_affiliation, 
+         -coffee_a_notes, -coffee_b_notes, -coffee_c_notes, -coffee_d_notes) |>
+  drop_na(gender) |>
+  mutate_if(is.character, as.factor)
+```
+
+
+
 ```{r}
 survey_tidy = 
   survey %>% 
