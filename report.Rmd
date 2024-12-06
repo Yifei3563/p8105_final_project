@@ -4,13 +4,43 @@ output:
   html_document:
     toc: true
     toc_float: true
-    code_folding: hide
 editor_options: 
   chunk_output_type: console
 ---
 
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(modelr)
+library(plotly)
+library(forcats)
+library(corrplot)
+library(glmnet)
+library(leaps)
+
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%",
+  warning = FALSE,
+  message = FALSE,
+  echo = FALSE
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+```
+
 ## Motivation
-Since the beginning of the 20th century, coffee has transcended national boundaries and catered to the tastes of diverse groups of people. As a group of coffee lovers, we are well-realized about how important a good cup of coffee can be for a fulfilling day. Therefore, we wish to analyze the quality of coffee from two aspects -- the objective geographical factors and subjective costumer preferences.
+
+Since the beginning of the 20th century, coffee has transcended national boundaries and catered to the tastes of diverse groups of people. As a group of coffee lovers, we are well-realized about how important a good cup of coffee can be for a fulfilling day. Therefore, we wish to analyze the quality of coffee from two aspects -- the objective geographical and technical factors and subjective consumer preferences.
 
 ## Data Source
 
@@ -149,41 +179,15 @@ Some possible questions include:
 
 For the ratings data, we first filtered out the variables needed for our project analysis then removed the unnecessary ones. We created a new column named `grading_year` by extracting the year as a four-digit number from the grading_date column using the `str_extract` function. This isolates the year, because we want to analyze the coffee ratings based on the year instead of focusing on a specific month and date. Additionally, the `species`, `variety`, and `processing_method` columns are converted into factors using the `as.factor` function. This step ensures that these variables are treated as categorical variables, making them suitable for our later statistical analysis. 
 
-For the surveys data, to make the analysis of the ratings for Coffee A, B, C, and D easier, we first used pivot long to turn coffee names, features, and respective scores into different variables. Then, we pivoted the dataset wider to make the features individual variables with the scores as their values. All categorical variables are mutated into factor variables, and we selected only useful variables for the analysis from the dataset. 
+### Survey Data
+
+For the survey data, we cleaned the variable names and removed observations that were missing too much information. All categorical variables are mutated into factor variables, and we selected only useful variables for the analysis from the dataset.
+
+To make the analysis of the ratings for Coffee A, B, C, and D easier, we first pivoted the dataset longer to turn coffee names, features, and respective scores into different variables. Then, we pivoted the dataset wider to assign the features to individual variables, with the scores as their values. The levels of the factor variables were rearranged in reasonable orders.
 
 ## Exploratory Analysis
 
 ### Ratings Data
-
-```{r setup, include=FALSE}
-library(tidyverse)
-library(ggplot2)
-library(modelr)
-library(plotly)
-library(forcats)
-library(corrplot)
-library(glmnet)
-library(leaps)
-
-knitr::opts_chunk$set(
-  fig.width = 6,
-  fig.asp = .6,
-  out.width = "90%",
-  warning = FALSE,
-  message = FALSE
-)
-
-theme_set(theme_minimal() + theme(legend.position = "bottom"))
-
-options(
-  ggplot2.continuous.colour = "viridis",
-  ggplot2.continuous.fill = "viridis"
-)
-
-scale_colour_discrete = scale_colour_viridis_d
-scale_fill_discrete = scale_fill_viridis_d
-```
-
 
 ```{r}
 ratings_df = read_csv("data/coffee_ratings.csv") %>% 
@@ -387,8 +391,6 @@ This comparison evaluates how different processing methods impact total cup poin
 
 #### The Distribution between Total Cup Points and Altitude by Variety
 
-
-
 ```{r}
 altitude_model = lm(altitude_mean_meters ~ total_cup_points, data = ratings_no_outliers)
 
@@ -397,9 +399,7 @@ x_vals = seq(min(ratings_no_outliers$total_cup_points, na.rm = TRUE),
 y_preds = predict(altitude_model, newdata = data.frame(total_cup_points = x_vals))
 ```
 
-
-
-```{r, warning=FALSE, message=FALSE}
+```{r}
 ratings_no_outliers |>
   filter(!is.na(total_cup_points) & !is.na(altitude_mean_meters)) |>
   mutate(text_label = str_c("Total Cup Points: ", total_cup_points, 
@@ -431,7 +431,6 @@ ratings_no_outliers |>
 ```
 
 
-
 This plot shows the distribution between the mean altitude of the coffee beans and the total cup points. Although there is no obvious trend if we only look at the scatter on the plot, we can see that there is a positive correlation between mean altitude and total cup points by looking at the increasing trend lines. As the altitude goes up, the total cup points of the coffee bean increases.
 
 
@@ -460,7 +459,7 @@ top_origins_yearly |>
 
 We are curious about the top coffee origins and want to see if there exists regional strengths or cultivation efforts. Therefore we make a table showing that top-performing coffees come from a diverse set of countries, with no single country dominating year after year. Ethiopia appears twice, with exceptionally high scores in 2015. 
 
-## Survey Data
+### Survey Data
 
 ```{r import_data}
 survey = read_csv("data/coffee_survey.csv") |>
@@ -472,7 +471,6 @@ survey = read_csv("data/coffee_survey.csv") |>
   drop_na(gender) |>
   mutate_if(is.character, as.factor)
 ```
-
 
 
 ```{r}
@@ -521,7 +519,7 @@ survey_tidy =
   relocate(prefer_overall, .after = everything())
 ```
 
-### Distribution: Bar charts
+#### Distribution: Bar charts
 
 ```{r}
 brew_df = 
@@ -572,9 +570,9 @@ why_drink_df %>%
          showlegend = FALSE)
 ```
 
-To start with, we built two bar charts to evaluate the distribution of the variables "brew" and "why_drink". The resulting graphs show that the most commonly used brewing method in the survey is "pour over", and people drink coffee mostly for it "tastes good".
+To start with, we built two bar charts to evaluate the distribution of the variables `brew` and `why_drink`. The resulting graphs show that the most commonly used brewing method in the survey is "pour over", and people drink coffee mostly for it "tastes good".
 
-### Co-occurence: Heatmaps
+#### Co-occurence: Heatmaps
 
 ```{r}
 survey_long =
@@ -636,7 +634,7 @@ co_occurrence_df %>%
 
 To investigate questions that can select multiple answers, we built this co-occurrence heatmap. Based on its results, we found that most people in this survey chose to drink coffee at home, while a proportion of people who choose to drink coffee at home also drink it in their office and in the cafe. 
 
-## Correlation: Favorite coffee vs. education level
+#### Correlation: Favorite coffee vs. education level
 
 ```{r}
 survey_tidy |>
@@ -656,9 +654,9 @@ survey_tidy |>
          barmode = "stack")
 ```
 
-This percentage bar plot reveals that, the more educated people are, the more they like pour-over coffee, and the less they like regular latte. 
+This stack bar plot reveals that the distribution of people's favorite coffee type varies by different education level. For example, the more educated people are, the more they like pour-over coffee, and the less they like regular latte. 
 
-## Correlation: Total money spend on coffee and education level
+#### Correlation: Total money spend on coffee vs. education level
 
 ```{r}
 survey_tidy %>% 
@@ -678,9 +676,9 @@ survey_tidy %>%
                        title = list(text = "<b>Education Level</b>")))
 ```
 
-From the line chart above, we can know that the higher a degree people possess, the more they spend on coffee per month. 
+From the line chart above, we can see that the overall trend in total spending is similar for people of different education levels: most people tend to spend $20 to $60 on coffee per month. People with a bachelor’s degree are the most numerous among the participants.
 
-## Correlation: Most weilling to pay vs. most paid
+#### Correlation: Most weilling to pay vs. most paid
 
 ```{r}
 survey_tidy %>% 
@@ -703,7 +701,7 @@ survey_tidy %>%
 
 This heatmap shows that, although most people pay what they say they would pay for coffee, some people would pay a lot more than what they are actually paying for a cup of coffee, suggesting potential space of improvement for current coffee market. 
 
-## Coffee ratings: Expertise vs. Preference
+#### Coffee ratings: Expertise vs. Preference
 
 ```{r}
 survey_tidy %>% 
@@ -726,7 +724,7 @@ survey_tidy %>%
 
 This percentage bar chart tells us that, the distribution of overall coffee pick is mostly even for people who do not consider themselves as coffee experts, while for those who consider themselves to be experts, coffee A and coffee D are the most popular, a very interesting trend that we will investigate further.
 
-## Distributions of Coffee ratings
+#### Distributions of Coffee ratings
 
 ```{r}
 survey_tidy %>% 
@@ -745,9 +743,9 @@ survey_tidy %>%
     fill = "Coffee Name")
 ```
 
-Moreover, the distributions of respective coffee ratings reveal that, people either like coffee D very much or do not like it at all, suggesting there must be something special about this coffee.
+Moreover, the distributions of respective coffee ratings reveal that coffees A, B, and C have similar, approximately normal distributions. However, for coffee D, people either like it very much or do not like it at all, suggesting that there must be something special about this coffee.
 
-## Distributions of Flavor and Coffee type
+#### Distributions of Flavor
 
 ```{r}
 plot_acidity = 
@@ -795,7 +793,7 @@ subplot(plot_acidity, plot_bitterness, nrows = 2, margin = 0.07) %>%
   ))
 ```
 
-The boxplots imply the first potential difference between coffee A&D and coffee B&C: coffee A&D are more acidic while less bitter. 
+The boxplots imply the first potential difference between coffee A & D and coffee B & C: coffee A & D are more acidic while less bitter. 
 
 Therefore, we will continue to discover whether this difference is statistically significant, and what characteristics may influence people's choice on coffee A or D, while they are similar in some flavors. Also, since expertise is a self-rated measure here, we will also examine what factors are correlated with how people rate themselves to be coffee experts.  
 
@@ -901,50 +899,40 @@ The results of the pairwise t-tests, adjusted using the Bonferroni method for mu
 
 #### ANOVA test: biterness, acidity, preference
 
+*Bitterness*
+
 ```{r}
-survey_anova = survey_tidy |>
+survey_anova = 
+  survey_tidy |>
   select(coffee_name, bitterness, acidity, preference) |>
   na.omit() |>
   slice_sample(n = 1000)
 
 anova_bitterness = aov(bitterness ~ coffee_name, data = survey_anova)
 
-summary(anova_bitterness)
-
-pairwise_bitterness = pairwise.t.test(survey_anova$bitterness, survey_anova$coffee_name, 
-                                    p.adjust.method = "bonferroni")
-
-print(pairwise_bitterness)
-
 survey_anova |>
   group_by(coffee_name) |>
   summarise(
     mean_bitterness = mean(bitterness)) |>
   knitr::kable(digits = 3)
+```
 
+*Acidity*
+
+```{r}
 anova_acidity = aov(acidity ~ coffee_name, data = survey_anova)
-
-summary(anova_acidity)
-
-pairwise_acidity = pairwise.t.test(survey_anova$acidity, survey_anova$coffee_name, 
-                                    p.adjust.method = "bonferroni")
-
-print(pairwise_acidity)
 
 survey_anova |>
   group_by(coffee_name) |>
   summarise(
     mean_acidity = mean(acidity)) |>
   knitr::kable(digits = 3)
+```
 
+*Preference*
+
+```{r}
 anova_preference = aov(preference ~ coffee_name, data = survey_anova)
-
-summary(anova_preference)
-
-pairwise_preference = pairwise.t.test(survey_anova$preference, survey_anova$coffee_name, 
-                                    p.adjust.method = "bonferroni")
-
-print(pairwise_preference)
 
 survey_anova |>
   group_by(coffee_name) |>
@@ -953,11 +941,11 @@ survey_anova |>
   knitr::kable(digits = 3)
 ```
 
-The results of these 3 ANOVA tests and the following pairwise t-tests statistically support the distributions of the boxplots. That is, coffee A&D are significantly more acidic than coffee B&C, and coffee B&C are significantly more bitter than coffee A&D. What's more, the tests on people's overall preference tell that people also score coffee A&D significantly higher than coffee B&C.
+The results of these 3 ANOVA tests (also confirmed in paired t-tests, see the [Statistical Analysis page](analysis_survey.html)) statistically support the distributions of the box plots in EDA. That is, according to the participants' evaluation, coffee A & D are significantly more acidic than coffee B & C, and coffee B & C are significantly more bitter than coffee A & D. What's more, the test on people's overall preference tells that people also rate coffee A & D significantly higher than coffee B & C.
 
 #### Coffee A or D?
 
-```{r}
+```{r, fig.asp = 1.1}
 coffee_ad_df = 
   survey_tidy %>% 
   distinct(submission_id, prefer_ad, gender, age, expertise, style, strength, caffeine) %>%
@@ -1004,11 +992,11 @@ bootstraps_ad %>%
          yaxis = list(title = "Term"))
 ```
 
-While people who rated themselves as coffee experts like both coffee A and coffee D, what may differentiate them from choosing between these 2 coffees? From this logistic regression model, we found that people who like fruity coffee and were younger when taken the survey were more likely to choose coffee D over coffee A. This corresponds with the survey design that coffee D is a more innovative and fruity-mixed coffee. 
+While EDA suggests that people who rated themselves as coffee experts like both coffee A and coffee D, what may differentiate them from choosing between these 2 coffees? From this logistic regression model, we find that people who like fruity coffee and were younger when taken the survey are more likely to choose coffee D over coffee A. This is consistent with the survey design that coffee D tastes fruitier, more complex, and more innovative.
 
 #### What makes people think they are experts?
 
-```{r}
+```{r, results='hide'}
 survey_model = survey_tidy |>
   distinct(submission_id, .keep_all = TRUE) |>
   select(expertise, age, favorite, style, strength, roast_level,
@@ -1027,13 +1015,17 @@ step(full_mlr, direction = "backward")
 
 final_mlr = lm(expertise ~ age + style + strength + roast_level + 
     caffeine + gender, data = survey_model)
+```
 
+```{r}
 final_mlr |>
   broom::tidy() |>
   knitr::kable(digits = 3)
 ```
 
-The multiple linear regression model filters style_bright, style_fruity, style_juicy, strong to somewhat strong strength, light and Nordic roast level, half-caffeine and full-caffeine, and gender_male as significant predictors of whether people consider themselves to be coffee experts. There are interesting overlaps with the previous logistic regression model, as people who like fruity and juicy styled coffee are also more likely to choose coffee D. 
+
+The multiple linear regression model filters bright / fruity / juicy style, strong to somewhat strong strength, light / Nordic roast level, half-caffeine / full-caffeine, and male gender as significant predictors of whether people consider themselves to be coffee experts. There are interesting overlaps with the previous logistic regression model, as people who like fruity and juicy styled coffee are also more likely to choose coffee D. 
+
 
 ## Discussion
 
@@ -1042,6 +1034,12 @@ The trend in average total cup points across eight years reveals significant flu
 
 
 Our predictive modeling using regression analysis highlights flavor as the most influential factor driving total cup points, followed by aftertaste and balance, emphasizing the importance of these sensory attributes in defining coffee quality and consumer preferences. While body and acidity have relatively smaller coefficients, they remain integral components of coffee evaluation. After conducting statistical testing through ANOVA and t-tests, there is no statistically significant differences in total cup points across processing methods, indicating that the method of processing alone does not substantially affect coffee quality.
+
+
+
+
+
+## Conclusion
 
 
 

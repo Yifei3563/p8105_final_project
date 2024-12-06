@@ -167,14 +167,14 @@ ui =
       
     selectInput(
       inputId = "gender_choice",
-      label = h4("Select Your Gender"),
+      label = h4("Select your gender"),
       choices = gender_choice,
       selected = "Female"
     ),
     
     selectInput(
       inputId = "age_choice",
-      label = h4("Select Your Age"),
+      label = h4("Select your age"),
       choices = age_choice,
       selected = "18-24 years old"
     ),

@@ -33,7 +33,6 @@
 <link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
 <script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
-<script src="site_libs/navigation-1.1/codefolding.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 <link href="site_libs/htmltools-fill-0.5.8.1/fill.css" rel="stylesheet" />
@@ -230,9 +229,6 @@ $(document).ready(function () {
 </style>
 
 <!-- code folding -->
-<style type="text/css">
-.code-folding-btn { margin-bottom: 4px; }
-</style>
 
 
 
@@ -409,14 +405,6 @@ div.tocify {
 
 <div id="header">
 
-<div class="btn-group pull-right float-right">
-<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
-<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
-<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
-<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
-</ul>
-</div>
-
 
 
 <h1 class="title toc-ignore">What Makes the Best Coffee?</h1>
@@ -438,13 +426,14 @@ href="https://www.youtube.com/watch?v=bMOOQfeloH0">“Great American
 Coffee Taste Test”</a>, which examines consumer preferences.</p>
 <p>In the Exploratory Analysis tab, you will find:</p>
 <ul>
-<li><p>The <a href="data_exploration_ratings.html">trends and
-distributions</a>of objective coffee ratings by year, species,
-varieties, processing methods, altitude, and country of origins</p></li>
-<li><p>The <a href="data_exploration_survey.html">coffee-related
-lifestyle topics</a>, such as brewing methods, reasons for drinking
-coffee, daily consumption habits, favorite coffee types, spending
-patterns, caffeine knowledge, and pricing preferences</p></li>
+<li><p>The trends and distributions of <a
+href="data_exploration_ratings.html">objective coffee ratings</a> by
+year, species, varieties, processing methods, altitude, and country of
+origins</p></li>
+<li><p>The <a href="data_exploration_survey.html">consumer lifestyles
+and preferences</a>, displaying people’s coffee-related lifestyle, their
+own assessment of their coffee expertise, and their tasting experiences
+with specific coffees</p></li>
 </ul>
 <p>In the Statistical Analysis tab, you will find:</p>
 <ul>
@@ -453,12 +442,14 @@ href="analysis_ratings.html">objective coffee ratings</a> about what
 factors truly affecting the coffee scores and whether coffee processing
 methods make a big difference in ratings</p></li>
 <li><p>The statistical analysis for the <a
-href="analysis_survey.html">coffee-related lifestyle topics</a>, showing
-interesting demographic facts about coffee consumers and there
-preferences between two different coffee</p></li>
+href="analysis_survey.html">consumer lifestyles and preferences</a>,
+showing interesting demographic facts about coffee consumers and their
+preferences between two different coffees</p></li>
+<li><p>A summary of <a href="general_analysis.html">our analysis
+results</a>.</p></li>
 </ul>
-<p>The <a href="shiny.html">Shiny tab</a> will help you explore and
-identify your preferred coffee processing methods.</p>
+<p>The <a href="shiny.html">Shiny tab</a> will explore your preferred
+coffee processing methods based on your lifestyle.</p>
 <p>The <a href="report.html">Report tab</a> provides a comprehensive
 overview of our analytical procedure, outlining each step in detail, and
 also a discussion about our findings combining the two datasets
@@ -466,50 +457,11 @@ together.</p>
 </div>
 <div id="coffee-world-map" class="section level3">
 <h3>Coffee World Map</h3>
-<pre class="r"><code>ratings_df = read_csv(&quot;data/coffee_ratings.csv&quot;) %&gt;%
-  janitor::clean_names() %&gt;%
-  select(total_cup_points, species, country_of_origin, 
-         region, grading_date, variety,processing_method, 
-         aroma, flavor, aftertaste, acidity, body, balance,
-         sweetness, moisture, color, altitude_low_meters, 
-         altitude_high_meters, altitude_mean_meters,) %&gt;%
-  mutate(grading_year = str_extract(grading_date, &quot;\\d{4}&quot;),
-         species = as.factor(species),
-         variety = as.factor(variety),
-         processing_method = as.factor(processing_method),
-         moisture = as.factor(moisture),
-         color = as.factor(color))</code></pre>
-<pre class="r"><code>coffee_counts = ratings_df |&gt;
-  mutate(
-    country_of_origin = tolower(country_of_origin),
-    country_of_origin = case_when(
-      country_of_origin %in% c(&quot;united states&quot;, &quot;united states (hawaii)&quot;, &quot;united states (puerto rico)&quot;) ~ &quot;united states&quot;,
-      TRUE ~ country_of_origin)
-  ) |&gt;
-  group_by(country_of_origin) |&gt;
-  summarise(count = n()) |&gt;
-  ungroup() |&gt;
-  mutate(iso3 = countrycode(country_of_origin, &quot;country.name&quot;, &quot;iso3c&quot;))
-
-plot_ly(
-  data = coffee_counts,
-  type = &quot;choropleth&quot;,
-  locations = ~iso3, 
-  z = ~count, 
-  colorscale = &quot;RdYlGn&quot;,  
-  text = ~country_of_origin, 
-  colorbar = list(
-    title = &quot;# of Coffee Varieties&quot;,
-    thickness = 10)
-) %&gt;%
-  layout(
-    title = &quot;Coffee-Producing Countries (based on our dataset)&quot;,
-    geo = list(
-      projection = list(type = &quot;natural earth&quot;)
-    )
-  )</code></pre>
-<div class="plotly html-widget html-fill-item" id="htmlwidget-08021cfea02fa394f0b5" style="width:90%;height:345.6px;"></div>
-<script type="application/json" data-for="htmlwidget-08021cfea02fa394f0b5">{"x":{"visdat":{"ecbb4e9ddcef":["function () ","plotlyVisDat"]},"cur_data":"ecbb4e9ddcef","attrs":{"ecbb4e9ddcef":{"locations":{},"z":{},"colorscale":"RdYlGn","text":{},"colorbar":{"title":"# of Coffee Varieties","thickness":10},"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"type":"choropleth"}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"title":"Coffee-Producing Countries (based on our dataset)","geo":{"projection":{"type":"natural earth"}},"scene":{"zaxis":{"title":"count"}},"hovermode":"closest","showlegend":false,"legend":{"yanchor":"top","y":0.5}},"source":"A","config":{"modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"data":[{"colorbar":{"title":"# of Coffee Varieties","ticklen":2,"thickness":10,"len":0.5,"lenmode":"fraction","y":1,"yanchor":"top"},"colorscale":"RdYlGn","showscale":true,"locations":["BRA","BDI","CHN","COL","CRI","CIV","ECU","SLV","ETH","GTM","HTI","HND","IND","IDN","JPN","KEN","LAO","MWI","MUS","MEX","MMR","NIC","PAN","PNG","PER","PHL","RWA","TWN","TZA","THA","UGA","USA","VNM","ZMB",null],"z":[132,2,16,183,51,1,3,21,44,181,6,53,14,20,1,25,3,11,1,236,8,26,4,1,10,5,1,75,40,32,36,87,8,1,1],"text":["brazil","burundi","china","colombia","costa rica","cote d?ivoire","ecuador","el salvador","ethiopia","guatemala","haiti","honduras","india","indonesia","japan","kenya","laos","malawi","mauritius","mexico","myanmar","nicaragua","panama","papua new guinea","peru","philippines","rwanda","taiwan","tanzania, united republic of","thailand","uganda","united states","vietnam","zambia",null],"type":"choropleth","marker":{"line":{"color":"rgba(31,119,180,1)"}},"frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+<div class="plotly html-widget html-fill-item" id="htmlwidget-a644cb51ea0d4bc7e306" style="width:90%;height:345.6px;"></div>
+<script type="application/json" data-for="htmlwidget-a644cb51ea0d4bc7e306">{"x":{"visdat":{"381425e51bb":["function () ","plotlyVisDat"]},"cur_data":"381425e51bb","attrs":{"381425e51bb":{"locations":{},"z":{},"colorscale":"RdYlGn","text":{},"colorbar":{"title":"# of Coffee Varieties","thickness":10},"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"type":"choropleth"}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"title":"Coffee-Producing Countries (based on our dataset)","geo":{"projection":{"type":"natural earth"}},"scene":{"zaxis":{"title":"count"}},"hovermode":"closest","showlegend":false,"legend":{"yanchor":"top","y":0.5}},"source":"A","config":{"modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"data":[{"colorbar":{"title":"# of Coffee Varieties","ticklen":2,"thickness":10,"len":0.5,"lenmode":"fraction","y":1,"yanchor":"top"},"colorscale":"RdYlGn","showscale":true,"locations":["BRA","BDI","CHN","COL","CRI","CIV","ECU","SLV","ETH","GTM","HTI","HND","IND","IDN","JPN","KEN","LAO","MWI","MUS","MEX","MMR","NIC","PAN","PNG","PER","PHL","RWA","TWN","TZA","THA","UGA","USA","VNM","ZMB",null],"z":[132,2,16,183,51,1,3,21,44,181,6,53,14,20,1,25,3,11,1,236,8,26,4,1,10,5,1,75,40,32,36,87,8,1,1],"text":["brazil","burundi","china","colombia","costa rica","cote d?ivoire","ecuador","el salvador","ethiopia","guatemala","haiti","honduras","india","indonesia","japan","kenya","laos","malawi","mauritius","mexico","myanmar","nicaragua","panama","papua new guinea","peru","philippines","rwanda","taiwan","tanzania, united republic of","thailand","uganda","united states","vietnam","zambia",null],"type":"choropleth","marker":{"line":{"color":"rgba(31,119,180,1)"}},"frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+<p>This map shows coffee producing countries based on our dataset, with
+light and dark colors representing the variety of coffee produced. Drag
+your mouse to see the distribution around the world!</p>
 </div>
 <div id="screencast" class="section level3">
 <h3>Screencast</h3>
@@ -561,11 +513,6 @@ $(document).ready(function () {
 </script>
 
 <!-- code folding -->
-<script>
-$(document).ready(function () {
-  window.initializeCodeFolding("hide" === "show");
-});
-</script>
 
 <script>
 $(document).ready(function ()  {

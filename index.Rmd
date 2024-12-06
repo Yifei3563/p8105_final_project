@@ -4,7 +4,6 @@ output:
   html_document:
     toc: true
     toc_float: true
-    code_folding: hide
 editor_options: 
   chunk_output_type: console
 ---
@@ -19,32 +18,42 @@ There are two datasets in our project analysis. One is from the [Coffee Quality 
 
 In the Exploratory Analysis tab, you will find:
 
- * The [trends and distributions](data_exploration_ratings.html)of objective coffee ratings by year, species, varieties, processing methods, altitude, and country of origins
+ * The trends and distributions of [objective coffee ratings](data_exploration_ratings.html) by year, species, varieties, processing methods, altitude, and country of origins
  
- * The [coffee-related lifestyle topics](data_exploration_survey.html), such as brewing methods, reasons for drinking coffee, daily consumption habits, favorite coffee types, spending patterns, caffeine knowledge, and pricing preferences
+ * The [consumer lifestyles and preferences](data_exploration_survey.html), displaying people’s coffee-related lifestyle, their own assessment of their coffee expertise, and their tasting experiences with specific coffees
  
 In the Statistical Analysis tab, you will find:
 
  * The statistical analysis for the [objective coffee ratings](analysis_ratings.html) about what factors truly affecting the coffee scores and whether coffee processing methods make a big difference in ratings
  
- * The statistical analysis for the [coffee-related lifestyle topics](analysis_survey.html), showing interesting demographic facts about coffee consumers and there preferences between two different coffee
+ * The statistical analysis for the [consumer lifestyles and preferences](analysis_survey.html), showing interesting demographic facts about coffee consumers and their preferences between two different coffees
+ 
+ * A summary of [our analysis results](general_analysis.html).
  
 
-The [Shiny tab](shiny.html) will help you explore and identify your preferred coffee processing methods.
+The [Shiny tab](shiny.html) will explore your preferred coffee processing methods based on your lifestyle.
 
 The [Report tab](report.html) provides a comprehensive overview of our analytical procedure, outlining each step in detail, and also a discussion about our findings combining the two datasets together.
 
 ### Coffee World Map
 
 ```{r, include=FALSE}
+library(tidyverse)
 library(plotly)
-library(dplyr)
 library(countrycode)
-library(readr)
 library(stringr)
+
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%",
+  warning = FALSE,
+  message = FALSE,
+  echo = FALSE
+)
 ```
 
-```{r, message=FALSE}
+```{r}
 ratings_df = read_csv("data/coffee_ratings.csv") %>%
   janitor::clean_names() %>%
   select(total_cup_points, species, country_of_origin, 
@@ -60,7 +69,7 @@ ratings_df = read_csv("data/coffee_ratings.csv") %>%
          color = as.factor(color))
 ```
 
-```{r, fig.width=6, fig.asp=.6, out.width="90%"}
+```{r}
 coffee_counts = ratings_df |>
   mutate(
     country_of_origin = tolower(country_of_origin),
@@ -91,6 +100,8 @@ plot_ly(
     )
   )
 ```
+
+This map shows coffee producing countries based on our dataset, with light and dark colors representing the variety of coffee produced. Drag your mouse to see the distribution around the world!
 
 ### Screencast
 

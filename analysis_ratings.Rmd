@@ -36,7 +36,7 @@ scale_fill_discrete = scale_fill_viridis_d
 
 
 
-```{r}
+```{r, echo = FALSE}
 ratings_df = read_csv("data/coffee_ratings.csv") %>%
   janitor::clean_names() %>%
   select(total_cup_points, species, country_of_origin, 
@@ -80,11 +80,7 @@ Before building the model, we perform the correlation test between these variabl
 ```{r}
 x = as.matrix(ratings_df[, features])
 y = ratings_df |> pull(total_cup_points)
-```
 
-
-
-```{r}
 lambda = 10^(seq(-2, 2.75, 0.1))
 
 lasso_fit =
@@ -95,6 +91,8 @@ lasso_cv =
 
 lambda_opt = lasso_cv[["lambda.min"]]
 ```
+
+
 
 Generating a sequence of lambda values to create a range of lambda values on a logarithmic scale to ensure our proper exploration of the regularization strength.
 

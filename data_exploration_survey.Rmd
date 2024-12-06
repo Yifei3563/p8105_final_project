@@ -9,7 +9,6 @@ editor_options:
   chunk_output_type: console
 ---
 
-
 ```{r setup, include=FALSE}
 library(tidyverse)
 library(ggplot2)
@@ -18,7 +17,7 @@ library(Matrix)
 
 knitr::opts_chunk$set(
   fig.width = 6,
-  fig.asp = .8,
+  fig.asp = .6,
   out.width = "90%",
   warning = FALSE,
   message = FALSE
@@ -35,18 +34,21 @@ scale_colour_discrete = scale_colour_viridis_d
 scale_fill_discrete = scale_fill_viridis_d
 ```
 
-# Data Importing and Organizing
+# Data Organizing
+
 
 ```{r import_data}
 survey = read_csv("data/coffee_survey.csv") |>
   janitor::clean_names() |>
-  select(-purchase_other, -favorite_specify, -additions_other, -prefer_abc, -prefer_ad, 
+  select(-purchase_other, -favorite_specify, -additions_other, -prefer_abc,  
          -why_drink_other, -know_source, -value_cafe, -value_equipment, -gender_specify, 
          -ethnicity_race_specify, -number_children, -political_affiliation, 
          -coffee_a_notes, -coffee_b_notes, -coffee_c_notes, -coffee_d_notes) |>
   drop_na(gender) |>
   mutate_if(is.character, as.factor)
 ```
+
+After data importing, we cleaned the variable names and removed observations that were missing too much information. All categorical variables are mutated into factor variables, and we selected only useful variables for the analysis from the dataset.
 
 ```{r tidy_data}
 survey_tidy = 
@@ -94,7 +96,15 @@ survey_tidy =
   relocate(prefer_overall, .after = everything())
 ```
 
+To make the analysis of the ratings for Coffee A, B, C, and D easier, we first pivoted the dataset longer to turn coffee names, features, and respective scores into different variables. Then, we pivoted the dataset wider to assign the features to individual variables, with the scores as their values. The levels of the factor variables were rearranged in reasonable orders.
+
 # Exploratory Data Analysis
+
+Our variables are mainly divided into three parts: *Demographic Information*, *Coffee-related Preferences and Lifestyle*, and *Tasting Experience of 4 Cups of Coffee Ordered*. The meaning of the variables will be explained in the corresponding parts (and are also shown in Data Source of the project report page).
+
+In the first part of EDA, **Coffee-related Lifestyle**, we will mainly discuss the distribution of people's *Demographic Information* and *Coffee-related Preferences and Lifestyle*, as well as the relationship within or between variables.
+
+In the second part of EDA, **Coffee Ratings**, we will mainly discuss the distribution of variables related to *Tasting Experience of 4 Cups of Coffee Ordered*.
 
 ## Coffee-related Lifestyle
 
@@ -230,7 +240,7 @@ co_occurrence_df %>%
     yaxis = list(title = ""))
 ```
 
-On the diagonal line of this heatmap, where each variable meets itself, the number stands for the percent of people in the dataset who choose this location to drink coffee. For example, around 92.14% of people choose to drink coffee at home. Because this categorical variable comes from a multiple choice question that allows people to choose several answers, the corresponding cell of different levels means the percent of people who choose the first level of the variable while also choosing the second level. For example, 31.73% of people who choose to drink coffee at home also choose to drink it in their office. Overall, the heatmap shows that most people tend to drink coffee in a fixed area rather than on the way.
+On the diagonal line of this heatmap, where each variable meets itself, the number stands for the percent of people in the dataset who choose this location to drink coffee. For example, around 92.14% of people choose to drink coffee at home. Since this categorical variable comes from a multiple choice question that allows people to choose several answers, the corresponding cell of different levels means the percent of people who choose the first level of the variable while also choosing the second level. For example, 31.73% of people who choose to drink coffee at home also choose to drink it in their office. Overall, the heatmap shows that most people tend to drink coffee in a fixed area rather than on the way.
 
 ### Cups per day
 
@@ -274,7 +284,7 @@ survey_tidy |>
          barmode = "stack")
 ```
 
-This plot of relationship between education level and favorite type of coffee interestingly demonstrates that the higher a person’s degree is, the more they tend to like pour-over coffee, while latte is the most broadly enjoyed by people with less than a high school diploma, suggesting the effect of information barrier. 
+The stack bar plot interestingly demonstrates that the distribution of people's favorite coffee type varies by different education level. For example, the higher one’s degree is, the more they tend to like pour-over coffee, while latte is the most broadly enjoyed by people with less than a high school diploma, somehow suggesting the effect of information barrier. 
 
 ### Total Spend
 
@@ -296,7 +306,7 @@ survey_tidy %>%
                        title = list(text = "<b>Education Level</b>")))
 ```
 
-This line plot displays the changes of people’s total spend amount of money on coffee while also showing its relationship with their education level. From the plot, we can see that most people with lower education level tend to spend 20$ to 40$ on coffee per month, but people with higher degrees can tolerate higher expenditures on coffee.
+This line plot displays the distribution of people’s total spend on coffee per month, while also showing its relationship with their education level. From the plot, we can see the overall trend is similar: most people tend to spend $20 to $60 on coffee per month. Since the majority of participants are highly educated (especially bachelor's degrees), it can be seen that people with higher degrees can tolerate higher expenditures on coffee.
 
 ### Caffeine & Expertise
 
@@ -344,38 +354,70 @@ survey_tidy %>%
     yaxis = list(title = "Most Willing to Pay (per cup)"))
 ```
 
-This heatmap demonstrates that although most people actually pay what they say they are willing to pay for a cup of coffee, there are also people who would pay much higher than they are currently paying for coffee of better quality. 
+The heat map shows that while most people would actually pay what they are willing to pay for a cup of coffee, there are some people who are willing to pay much more than they currently do for a better quality cup of coffee.
 
 ## Coffee Ratings
 
-In this part of the survey, the researchers offered participants with 4 different kinds of coffee—A, B, C, and , D, and asked them to rate each coffee by their sweetness, bitterness, and their overall preference.
+In this part of the survey, the researchers offered participants with 4 different kinds of coffee — A, B, C, and D. The coffees were extracted, i.e. melted and diluted the little ice cubes of coffee down, which ensured that participants who tasted them had theoretical and identical tasting experience. Participants were asked to share their tasting experience by:
+
+1) Rate the **sweetness** of each coffee
+
+2) Rate the **bitterness** of each coffee
+
+3) Choose the one they prefer between **coffee A and D**
+
+4) Rate their **preference** for each coffee and choose their favorite
+
+Here are the features of these coffees:
+
+* Coffee A: light roast coffee from Kenya, washed processed
+
+* Coffee B: blend, medium roast coffee
+
+* Coffee C: blend, dark roast coffee
+
+* Coffee D: single-estate coffee, fruity, natural processed, strongly fermented, an experimental process and an unusual variety from Colombia
+
 
 ### Overall Preference
 
-```{r overall_prefer}
-colors = c('rgb(221, 170, 204)', 
+```{r choice}
+colors_pie = c('rgb(221, 170, 204)', 
            'rgb(187, 102, 136)', 
            'rgb(136, 136, 204)', 
            'rgb(204, 170, 136)')
 
-survey_tidy %>% 
-  distinct(submission_id, prefer_overall) %>% 
-  group_by(prefer_overall) %>% 
-  count() %>% 
-  plot_ly(
-    labels = ~prefer_overall, values = ~n, type = "pie", 
-    textposition = "inside",
-    textinfo = "label+percent",
-    insidetextfont = list(color = '#FFFFFF'),
-    marker = list(colors = colors,
-                  line = list(color = '#FFFFFF', width = 1))
-    ) %>% 
-  layout(
-    title = "Overall Preference of Coffee"
-  )
+pie_df = 
+  survey_tidy %>% 
+  distinct(submission_id, prefer_overall, prefer_ad) %>%
+  drop_na(prefer_overall, prefer_ad)
+
+pie_fig = plot_ly()
+
+pie_fig %>% 
+  add_pie(data = count(pie_df, prefer_overall), 
+          labels = ~prefer_overall, values = ~n,
+          textposition = "inside", textinfo = "label+percent",
+          insidetextfont = list(color = '#FFFFFF'), 
+          marker = list(colors = colors_pie, line = list(color = '#FFFFFF', width = 1)),
+          domain = list(x = c(0, 0.5), y = c(0.2, 1)),
+          title = list(text = "Overall Preference of Coffee", font = list(size = 16))) %>% 
+  add_pie(data = count(pie_df, prefer_ad), 
+          labels = ~prefer_ad, values = ~n,
+          textposition = "inside", textinfo = "label+percent",
+          insidetextfont = list(color = '#FFFFFF'), 
+          marker = list(line = list(color = '#FFFFFF', width = 1)),
+          domain = list(x = c(0.5, 1), y = c(0.2, 1)),
+          title = list(text = "Choice between Coffee A and D", font = list(size = 16))) %>% 
+  layout(legend = list(orientation = "h", 
+                       y = 0.1,
+                       title = list(text = "<b>Coffee Name</b>"),
+                       traceorder = "normal"))
 ```
 
-This pie chart shows that, out of the four kinds of coffee, most people choose coffee D as their favorite.
+This pie chart on the left shows that, out of the four kinds of coffee, most people choose coffee D as their favorite, while the popularity of other 3 coffees are very similar. This pie chart on the right shows that, when people are asked to choose between coffee A or D, more people will prefer coffee D.
+
+Such results make us curious: what exactly makes coffee A and D stand out, and what factors influence people to choose between coffee A and D? In order to answer these questions, we will look at following plots and further perform some statistical analysis.
 
 ```{r expertise_prefer}
 survey_tidy %>% 
@@ -417,11 +459,11 @@ survey_tidy %>%
     fill = "Coffee Name")
 ```
 
-The respective distributions of ratings for the 4 types of coffee reveals that, while coffee A, B, and C have a normal distribution, meaning that most people rate them as mediocre or somewhat better than mediocre, coffee D receives a more extreme rating. Participants either like coffee D very much or do not like it at all. 
+The respective distributions of ratings for the 4 types of coffee reveals that, while coffee A, B, and C have a similar, approximately normal distribution, meaning that most people rate them as mediocre or somewhere around mediocre, coffee D receives a more extreme rating. Participants either like coffee D very much or do not like it at all. 
 
 ### Flavor Ratings
 
-```{r coffee_taste}
+```{r coffee_taste, fig.asp = .8}
 plot_acidity = 
   survey_tidy %>% 
   select(coffee_name, acidity) %>% 
