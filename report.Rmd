@@ -897,9 +897,9 @@ pairwise.t.test(ratings_no_outliers$total_cup_points, ratings_no_outliers$proces
 
 The results of the pairwise t-tests, adjusted using the Bonferroni method for multiple comparisons, reveal no statistically significant differences in total cup points between any pairs of processing methods. All adjusted p-values are greater than 0.05. This suggests that the mean total cup points are comparable across the different processing methods analyzed (e.g., Natural/Dry, Other, Pulped Natural/Honey, Semi-Washed/Semi-Pulped, and Washed/Wet). The lack of significant differences aligns with the earlier ANOVA results, indicating that the processing method does not have a substantial impact on total cup points when considering the current dataset.
 
-## Survey Data
+### Survey Data
 
-### ANOVA test: biterness, acidity, preference
+#### ANOVA test: biterness, acidity, preference
 
 ```{r}
 survey_anova = survey_tidy |>
@@ -955,7 +955,7 @@ survey_anova |>
 
 The results of these 3 ANOVA tests and the following pairwise t-tests statistically support the distributions of the boxplots. That is, coffee A&D are significantly more acidic than coffee B&C, and coffee B&C are significantly more bitter than coffee A&D. What's more, the tests on people's overall preference tell that people also score coffee A&D significantly higher than coffee B&C.
 
-### Coffee A or D?
+#### Coffee A or D?
 
 ```{r}
 coffee_ad_df = 
@@ -1006,7 +1006,7 @@ bootstraps_ad %>%
 
 While people who rated themselves as coffee experts like both coffee A and coffee D, what may differentiate them from choosing between these 2 coffees? From this logistic regression model, we found that people who like fruity coffee and were younger when taken the survey were more likely to choose coffee D over coffee A. This corresponds with the survey design that coffee D is a more innovative and fruity-mixed coffee. 
 
-## What makes people think they are experts?
+#### What makes people think they are experts?
 
 ```{r}
 survey_model = survey_tidy |>
